@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registrar Ingreso de Insumos - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <h3>MÓDULO ALMACÉN</h3>
+            <span>Encargado: Alvaro Suica</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="generar-orden.html"><i class="fa-solid fa-file-invoice-dollar"></i> Orden de Compra</a></li>
+            <li class="active"><a href="registrar-ingreso.html"><i class="fa-solid fa-dolly"></i> Ingreso de Insumos</a></li>
+            <li><a href="ver-almacen.html"><i class="fa-solid fa-warehouse"></i> Ver Almacén</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Registrar Ingreso de Insumos</h2>
+        </div>
+
+        <div class="action-bar">
+            <button type="button" class="btn btn-primary" id="btn-buscar-orden">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar Orden de Insumos
+            </button>
+        </div>
+
+        <form id="form-ingreso" autocomplete="off">
+            <div class="form-container">
+                <div class="form-group">
+                    <label>Código Nota Ingreso</label>
+                    <input type="text" id="ingreso-doc" value="ING-AUTOGENERADO" disabled style="background-color: #1e293b; color: #94a3b8;">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Registro</label>
+                    <input type="text" id="ingreso-fecha" disabled style="background-color: #1e293b; color: #94a3b8;">
+                </div>
+                <div class="form-group">
+                    <label>Estado Nota</label>
+                    <input type="text" id="ingreso-estado" value="Borrador" disabled style="background-color: #1e293b; color: #e2e8f0; font-weight: bold;">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label>Orden de Compra Vinculada</label>
+                    <input type="text" id="txt-orden-vinculada" placeholder="Ninguna seleccionada" readonly style="background-color: #1e293b; color: #10b981; font-weight: bold;">
+                </div>
+            </div>
+
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Insumo</th>
+                            <th>Cantidad Solicitada</th>
+                            <th>Precio Pactado</th>
+                            <th style="width: 150px;">Cantidad Recibida Real</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-ingreso-detalle">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #64748b;">
+                                Haga clic en 'Buscar Orden de Insumos' para cargar los requerimientos pendientes.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 15px;">
+                <button type="button" class="btn btn-secondary" id="btn-salir-ingreso">
+                    <i class="fa-solid fa-arrow-left"></i> Salir
+                </button>
+                <button type="submit" class="btn btn-success">
+                    <i class="fa-solid fa-truck-ramp-box"></i> Grabar Ingreso
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="modal-overlay hidden" id="modal-ordenes">
+        <div class="modal-box" style="max-width: 750px;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-list"></i> Seleccionar Orden Pendiente</h3>
+                <button type="button" id="btn-close-modal-o" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="table-responsive" style="margin-top: 15px; max-height: 320px; overflow-y: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>N° Orden</th>
+                            <th>Fecha Emisión</th>
+                            <th>Proveedor Destino</th>
+                            <th>Estado</th>
+                            <th style="text-align: center;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-modal-ordenes">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #64748b;">Cargando órdenes desde el servidor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/registrar-ingreso.js"></script>
+</body>
+</html>

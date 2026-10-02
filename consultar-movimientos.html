@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Consultar Movimientos - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <!-- Menú Lateral -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-user-shield"></i>
+            <h3>MÓDULO SUPERVISOR</h3>
+            <span>Administrador</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="consultar-movimientos.html"><i class="fa-solid fa-chart-line"></i> Consultar Movimientos</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <div class="content-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Historial de Movimientos y Flujos de Caja</h2>
+            <button type="button" class="btn btn-success" id="btn-exportar-pdf"><i class="fa-solid fa-file-pdf"></i> Exportar Reporte PDF</button>
+        </div>
+
+        <!-- Panel de Filtros Estrictos -->
+        <div class="card-panel">
+            <div class="panel-title"><i class="fa-solid fa-filter"></i> Filtros de Auditoría Avanzada</div>
+            <div class="form-grid" style="grid-template-columns: repeat(3, 1fr) 0.5fr;">
+                
+                <div class="form-group">
+                    <label>Tipo de Flujo Financiero</label>
+                    <select id="select-filtro-tipo">
+                        <option value="TODOS">-- Mostrar Todos --</option>
+                        <option value="INGRESO">Ingresos (Venta de Boletos)</option>
+                        <option value="APERTURA">Fondo Inicial (Aperturas)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Rango de Turno</label>
+                    <select id="select-filtro-turno">
+                        <option value="TODOS">Cualquier hora del día</option>
+                        <option value="MAÑANA">Turno Mañana (08:00 - 14:00)</option>
+                        <option value="NOCHE">Turno Noche (18:00 - 23:59)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Caja Específica</label>
+                    <input type="text" id="txt-filtro-caja" placeholder="Ej. CAJA-01">
+                </div>
+
+                <div class="form-group" style="justify-content: flex-end;">
+                    <button type="button" class="btn btn-primary" id="btn-filtrar-mov" style="width: 100%; height: 42px; justify-content: center;">
+                        <i class="fa-solid fa-sliders"></i> Filtrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Datos: Entidad Movimiento_Caja -->
+        <div class="card-panel">
+            <div class="panel-title"><i class="fa-solid fa-list-ol"></i> Listado de Registros Transaccionales Obtenidos</div>
+            <div class="table-responsive">
+                <table class="data-table" id="tabla-movimientos">
+                    <thead>
+                        <tr>
+                            <th>ID Movimiento</th>
+                            <th>Caja Asignada</th>
+                            <th>Tipo de Movimiento</th>
+                            <th>Monto Líquido</th>
+                            <th>Sello de Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-movimientos">
+                        <!-- Renderizado dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/consultar-movimientos.js"></script>
+</body>
+</html>

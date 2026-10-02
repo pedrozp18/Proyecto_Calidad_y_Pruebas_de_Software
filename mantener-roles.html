@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Roles - CINEWEB PREMIUM</title>
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <h2>Gestión de Roles de Sistema</h2>
+    
+    <!-- Formulario para agregar roles -->
+    <form id="form-rol">
+        <input type="text" id="nombre_rol" placeholder="Nombre del Rol (ej. Cajero)" required>
+        <input type="text" id="descripcion" placeholder="Descripción del rol" required>
+        <button type="submit">Guardar Rol</button>
+    </form>
+
+    <!-- Tabla para listar roles existentes -->
+    <h3>Roles Registrados</h3>
+    <table border="1" id="tabla-roles">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Rol</th>
+                <th>Descripción</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script src="js/mantener-roles.js"></script>
+</body>
+</html>

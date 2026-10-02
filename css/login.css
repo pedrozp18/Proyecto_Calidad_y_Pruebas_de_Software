@@ -1,0 +1,143 @@
+/* --- ESTILOS DE LA PANTALLA DE ACCESO (MANTENIENDO LA PALETA CORPORATIVA) --- */
+
+:root {
+    --bg-deep: #0f172a;       /* Gris noche oscuro */
+    --bg-panel: #1e293b;      /* Gris azulado para el contenedor */
+    --border-color: #334155;  /* Color de bordes del modelo */
+    --text-white: #ffffff;
+    --text-muted: #94a3b8;
+    --cine-red: #ef4444;      /* Rojo institucional de acento */
+    --cine-green: #10b981;    /* Verde para estados exitosos */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-deep);
+    color: var(--text-white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.login-wrapper {
+    width: 100%;
+    max-width: 420px;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 35px 30px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    font-size: 3rem;
+    color: var(--cine-red);
+    margin-bottom: 10px;
+}
+
+.login-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.login-header p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 5px;
+}
+
+/* FORMULARIO Y ENTRADAS */
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.input-group label i {
+    margin-right: 5px;
+    width: 16px;
+}
+
+.input-group input, .input-group select {
+    background-color: var(--bg-deep);
+    border: 1px solid var(--border-color);
+    color: var(--text-white);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus, .input-group select:focus {
+    border-color: var(--cine-red);
+}
+
+/* BOTÓN DE ACCESO */
+.btn-login {
+    background-color: var(--cine-red);
+    color: var(--text-white);
+    border: none;
+    width: 100%;
+    padding: 14px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-login:hover {
+    background-color: #dc2626;
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+/* MENSAGES DE ALERTA */
+.alert-error {
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid var(--cine-red);
+    color: #fca5a5;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hidden {
+    display: none !important;
+}

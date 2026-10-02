@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Programar Función - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-calendar-days"></i>
+            <h3>MÓDULO PROGRAMACIÓN</h3>
+            <span>Operador: A. Suica</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="mantener-peliculas.html"><i class="fa-solid fa-clapperboard"></i> Catálogo de Películas</a></li>
+            <li class="active"><a href="programar-funcion.html"><i class="fa-solid fa-clock"></i> Programar Funciones</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Asignación y Apertura de Funciones en Cartelera</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.1fr 1.4fr; gap: 25px; align-items: start;">
+            
+            <div class="card-panel">
+                <div class="panel-title"><i class="fa-solid fa-hourglass-start"></i> Configurar Nueva Sesión</div>
+                
+                <form id="form-funcion">
+                    <div class="form-grid" style="grid-template-columns: 1fr; gap: 15px;">
+                        
+                        <div class="form-group">
+                            <label>Seleccionar Película</label>
+                            <select id="select-pelicula" required>
+                                <option value="">-- Cargando películas... --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label>Sala Física</label>
+                                <select id="select-sala" required>
+                                    <option value="">-- Cargando salas... --</option>
+                                </select>
+                            </div>
+
+                            <!-- BUSCA ESTA SECCIÓN DEL PRECIO Y REEMPLÁZALA -->
+                            <div class="form-group">
+                                <label>Tipo de Cartelera</label>
+                                <select id="select-tipo-cartelera" required style="background-color: #1e293b; color: #f8fafc;">
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="18.00">Estreno (S/. 18.00)</option>
+                                    <option value="14.00">Regular (S/. 14.00)</option>
+                                    <option value="10.00">Fin de Ciclo (S/. 10.00)</option>
+                                </select>
+                                <!-- Este campo oculto guardará el valor numérico final para el JavaScript -->
+                                <input type="hidden" id="num-precio" value="">
+                            </div>
+                            
+                        </div>
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="date-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Hora Inicio</label>
+                                <input type="time" id="time-inicio" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;"><i class="fa-solid fa-calendar-plus"></i> Habilitar Función</button>
+                </form>
+            </div>
+
+            <div class="card-panel">
+                <div class="panel-title"><i class="fa-solid fa-network-wired"></i> Cartelera Activa</div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Película</th>
+                                <th>Sala</th>
+                                <th>Fecha/Hora</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-funciones"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/programar-funcion.js"></script>
+</body>
+</html>

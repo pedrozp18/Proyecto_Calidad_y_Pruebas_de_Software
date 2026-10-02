@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mantener Películas - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <!-- Menú Lateral del Actor: Encargado de Programación -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-calendar-days"></i>
+            <h3>MÓDULO PROGRAMACIÓN</h3>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="mantener-peliculas.html"><i class="fa-solid fa-clapperboard"></i> Catálogo de Películas</a></li>
+            <li><a href="programar-funcion.html"><i class="fa-solid fa-clock"></i> Programar Funciones</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Gestión del Catálogo de Películas (Cartelera)</h2>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; align-items: start;">
+            
+            <!-- FORMULARIO DE REGISTRO / EDICIÓN -->
+            <div class="card-panel">
+                <div class="panel-title"><i class="fa-solid fa-plus"></i> Registrar / Editar Película</div>
+                <form id="form-pelicula">
+                    <div class="form-grid" style="grid-template-columns: 1fr; gap: 15px;">
+                        
+                        <div class="form-group">
+                            <label>Título de la Película</label>
+                            <input type="text" id="txt-titulo" placeholder="Ej. Interestelar" required autocomplete="off">
+                        </div>
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label>Género Principal</label>
+                                <select id="select-genero" required>
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="Acción">Acción</option>
+                                    <option value="Ciencia Ficción">Ciencia Ficción</option>
+                                    <option value="Drama">Drama</option>
+                                    <option value="Terror">Terror</option>
+                                    <option value="Animación">Animación</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Clasificación (Restricción)</label>
+                                <select id="select-clasificacion" required>
+                                    <option value="">-- Seleccione --</option>
+                                    <option value="Apt. Todo Público">Apt. Todo Público (G)</option>
+                                    <option value="Mayores de 14">Mayores de 14 años (PG-13)</option>
+                                    <option value="Mayores de 18">Mayores de 18 años (R)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div class="form-group">
+                                <label>Duración (Minutos)</label>
+                                <input type="number" id="num-duracion" min="1" placeholder="Ej. 169" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Idioma / Formato</label>
+                                <select id="select-idioma" required>
+                                    <option value="Doblada (Español)">Doblada (Español)</option>
+                                    <option value="Subtitulada (Inglés)">Subtitulada (Inglés)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                        <button type="button" class="btn btn-secondary" id="btn-limpiar"><i class="fa-solid fa-broom"></i> Limpiar</button>
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Guardar Película</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- TABLA DE VISUALIZACIÓN DATA MAESTRA -->
+            <div class="card-panel">
+                <div class="panel-title"><i class="fa-solid fa-film"></i> Películas en la Base de Datos del Cine</div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Género</th>
+                                <th>Duración</th>
+                                <th>Clasif.</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-peliculas">
+                            <!-- Inyección dinámica -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/mantener-peliculas.js"></script>
+</body>
+</html>

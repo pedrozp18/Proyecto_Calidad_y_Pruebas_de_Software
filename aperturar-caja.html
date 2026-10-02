@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Apertura de Caja - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <!-- Menú Lateral del Actor: Cajero -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-cash-register"></i>
+            <h3>MÓDULO CAJERO</h3>
+            <span>Cajero</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="aperturar-caja.html"><i class="fa-solid fa-door-open"></i> Apertura de Caja</a></li>
+            <li><a href="venta-presencial.html"><i class="fa-solid fa-ticket"></i> Venta Presencial</a></li>
+            
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Control de Turno: Apertura de Caja</h2>
+        </div>
+
+        <div class="card-panel" style="max-width: 600px; margin: 0 auto;">
+            <div class="panel-title"><i class="fa-solid fa-key"></i> Inicializar Parámetros de Caja</div>
+            
+            <form id="form-apertura">
+                <div class="form-grid" style="grid-template-columns: 1fr; gap: 20px;">
+                    
+                    <div class="form-group">
+                        <label>Nombre del Cajero Asignado</label>
+                        <!-- Se utiliza el nombre legal del usuario recuperado del registro del sistema -->
+                        <input type="text" id="txt-nombre-cajero" readonly value="Cajero Pedro">
+                    </div>
+
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group">
+                            <label>Número de Caja Física</label>
+                            <select id="select-num-caja" required>
+                                <option value="">-- Seleccione --</option>
+                                <option value="CAJA-01">Caja 01 - Taquilla Principal</option>
+                                <option value="CAJA-02">Caja 02 - Taquilla Principal</option>
+                                <option value="CAJA-03">Caja 03 - Zona Preferencial</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Monto Inicial de Apertura (S/.)</label>
+                            <input type="number" id="num-monto-inicial" min="0" step="10" placeholder="Ej. 150" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fecha y Hora de Apertura (Sistema)</label>
+                        <input type="text" id="txt-fecha-apertura" readonly placeholder="Cargando hora...">
+                    </div>
+
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 15px; margin-top: 30px;">
+                    <button type="submit" class="btn btn-success" style="width: 100%; justify-content: center; padding: 14px;">
+                        <i class="fa-solid fa-unlock-keyhole"></i> Confirmar Apertura e Ingresar al Sistema
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/aperturar-caja.js"></script>
+</body>
+</html>

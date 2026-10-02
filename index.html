@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineWeb Premium - Control de Acceso</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fa-solid fa-film logo-icon"></i>
+                <h2>CINEWEB PREMIUM</h2>
+                <p>Sistema Integrado de Gestión Cinematográfica</p>
+            </div>
+
+            <form id="form-login">
+                <div class="input-group">
+                    <label for="txt-usuario"><i class="fa-solid fa-user"></i> Usuario / Código</label>
+                    <input type="text" id="txt-usuario" required placeholder="Ej.Cajero" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="txt-password"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                    <input type="password" id="txt-password" required placeholder="••••••••">
+                </div>
+
+                <div class="input-group">
+                    <label for="select-rol"><i class="fa-solid fa-user-gear"></i> Rol de Sistema</label>
+                    <select id="select-rol" required>
+                        <option value="">-- Seleccione su Rol Asignado --</option>
+                        <option value="EA">Encargado de Almacén</option>
+                        <option value="C">Cajero</option>
+                        <option value="SC">Supervisor de Caja</option>
+                        <option value="EP">Encargado de Programación</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-login">
+                    <i class="fa-solid fa-right-to-bracket"></i> Validar Credenciales
+                </button>
+            </form>
+
+            <div id="login-error" class="alert-error hidden">
+                <i class="fa-solid fa-circle-exclamation"></i> <span id="error-msg">Credenciales no válidas.</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/login.js"></script>
+</body>
+</html>

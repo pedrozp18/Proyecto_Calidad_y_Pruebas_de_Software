@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Arqueo y Cierre de Caja - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-cash-register"></i>
+            <h3>MÓDULO CAJERO</h3>
+            <span id="lbl-cajero-nav">Operador: Cargando...</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="aperturar-caja.html"><i class="fa-solid fa-door-open"></i> Apertura de Caja</a></li>
+            <li><a href="venta-presencial.html"><i class="fa-solid fa-ticket"></i> Venta Presencial</a></li>
+            <li class="active"><a href="cerrar-caja.html"><i class="fa-solid fa-calculator"></i> Arqueo y Cierre</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Proceso de Auditoría: Arqueo y Cierre de Turno</h2>
+            <span class="badge" id="lbl-caja-activa" style="background-color: #ef4444;"><i class="fa-solid fa-lock"></i> Consultando...</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+            
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-chart-line" style="color: var(--cine-sky);"></i>
+                    <h4>Balance Esperado en Sistema</h4>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                        <span style="color: var(--text-gray);">(+) Monto Inicial de Apertura:</span>
+                        <span id="txt-resumen-apertura" style="font-weight: bold; color: var(--text-white);">S/ 0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                        <span style="color: var(--text-gray);">(+) Ventas Totales en Turno:</span>
+                        <span id="txt-resumen-ventas" style="font-weight: bold; color: var(--cine-green);">S/ 0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding-top: 10px; font-size: 1.2rem; font-weight: bold;">
+                        <span style="color: var(--cine-sky);">(=) SALDO ESPERADO:</span>
+                        <span id="txt-saldo-esperado" style="color: var(--cine-sky);">S/ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <i class="fa-solid fa-coins" style="color: var(--cine-gold);"></i>
+                    <h4>Conteo de Efectivo Físico</h4>
+                </div>
+                <form id="form-cierre" style="margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Monto Total Contado en Caja (S/.)</label>
+                        <input type="number" id="num-monto-real" min="0" step="0.10" placeholder="Ej. 250.50" required style="font-size: 1.2rem; font-weight: bold; color: var(--cine-gold);">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Observaciones del Cuadre / Justificación</label>
+                        <textarea id="txt-observaciones" rows="3" placeholder="Escriba aquí si existió algún descuadre o incidencia con billetes deteriorados..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-danger" style="width: 100%; justify-content: center; padding: 14px; margin-top: 15px; font-weight: bold;">
+                        <i class="fa-solid fa-lock-open"></i> Consolidar Arqueo y Cerrar Caja
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="js/cerrar-caja.js"></script>
+</body>
+</html>

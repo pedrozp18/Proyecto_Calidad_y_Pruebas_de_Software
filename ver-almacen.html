@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario de Almacén - CineWeb Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <h3>MÓDULO ALMACÉN</h3>
+            <span>Encargado: Almacenero </span>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="generar-orden.html"><i class="fa-solid fa-file-invoice-dollar"></i> Orden de Compra</a></li>
+            <li><a href="registrar-ingreso.html"><i class="fa-solid fa-dolly"></i> Ingreso de Insumos</a></li>
+            <li class="active"><a href="ver-almacen.html"><i class="fa-solid fa-warehouse"></i> Ver Almacén</a></li>
+            <li style="margin-top: 50px;"><a href="index.html" style="color: #f87171;"><i class="fa-solid fa-power-off"></i> Cerrar Sesión</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="content-header">
+            <h2>Kardex / Inventario Global de Insumos</h2>
+        </div>
+
+        <div class="action-bar" style="display: grid; grid-template-columns: 3fr 1fr; gap: 15px;">
+            <div class="form-group" style="margin: 0;">
+                <input type="text" id="txt-buscar-insumo" placeholder="Buscar insumo por nombre en tiempo real...">
+            </div>
+            <button type="button" class="btn btn-primary" id="btn-refrescar">
+                <i class="fa-solid fa-rotate"></i> Actualizar Stock
+            </button>
+        </div>
+
+        <div class="table-responsive" style="margin-top: 20px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID Insumo</th>
+                        <th>Nombre del Artículo</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo Alerta</th>
+                        <th>Precio Sugerido</th>
+                        <th style="text-align: center;">Estado de Criticidad</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-almacen">
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #64748b;">Cargando inventario desde la base de datos...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const tbodyAlmacen = document.getElementById("tbody-almacen");
+            const txtBuscarInsumo = document.getElementById("txt-buscar-insumo");
+            const btnRefrescar = document.getElementById("btn-refrescar");
+            
+            let todosLosInsumos = [];
+
+            // Función para consultar a MySQL a través de las rutas existentes en tu server.js
+            function cargarInventario() {
+                tbodyAlmacen.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b;">Consultando saldos actuales...</td></tr>`;
+                
+                // Usamos la API de insumos que ya lee tu tabla de MySQL
+                fetch('http://localhost:3000/api/almacen/insumos')
+                    .then(res => res.json())
+                    .then(data => {
+                        todosLosInsumos = data;
+                        renderizarTabla(todosLosInsumos);
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        tbodyAlmacen.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #f87171;">❌ Error al conectar con el servidor backend: ${err.message}</td></tr>`;
+                    });
+            }
+
+            // Función para renderizar y clasificar el stock dinámicamente
+            function renderizarTabla(lista) {
+                tbodyAlmacen.innerHTML = "";
+
+                if (lista.length === 0) {
+                    tbodyAlmacen.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #64748b;">No se encontraron artículos en el inventario.</td></tr>`;
+                    return;
+                }
+
+                let htmlFilas = "";
+                lista.forEach(ins => {
+                    // Lógica del objetivo específico 2: Si stockActual <= stockMinimo -> Alerta Crítica
+                    const esCritico = ins.stockActual <= ins.stockMinimo;
+                    
+                    const badgeEstado = esCritico 
+                        ? `<span class="badge" style="background-color: #ef4444; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold;"><i class="fa-solid fa-triangle-exclamation"></i> CRÍTICO (Reponer)</span>`
+                        : `<span class="badge" style="background-color: #10b981; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold;"><i class="fa-solid fa-circle-check"></i> ÓPTIMO</span>`;
+
+                    const estiloStock = esCritico ? "color: #f87171; font-weight: bold;" : "color: #f8fafc;";
+
+                    htmlFilas += `
+                        <tr>
+                            <td>#${ins.idInsumo}</td>
+                            <td><strong>${ins.nombre}</strong></td>
+                            <td style="${estiloStock}">${ins.stockActual} unidades</td>
+                            <td>${ins.stockMinimo} unidades</td>
+                            <td>S/. ${parseFloat(ins.precioSugerido).toFixed(2)}</td>
+                            <td style="text-align: center;">${badgeEstado}</td>
+                        </tr>
+                    `;
+                });
+                tbodyAlmacen.innerHTML = htmlFilas;
+            }
+
+            // Filtro en tiempo real por teclado
+            txtBuscarInsumo.addEventListener("input", () => {
+                const busqueda = txtBuscarInsumo.value.toLowerCase().trim();
+                const filtrados = todosLosInsumos.filter(ins => 
+                    ins.nombre.toLowerCase().includes(busqueda)
+                );
+                renderizarTabla(filtrados);
+            });
+
+            btnRefrescar.addEventListener("click", cargarInventario);
+
+            // Carga inicial al abrir la página
+            cargarInventario();
+        });
+    </script>
+</body>
+</html>

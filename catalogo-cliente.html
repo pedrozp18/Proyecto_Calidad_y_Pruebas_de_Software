@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINE_D&A - Cartelera & Entradas</title>
+    <link rel="stylesheet" href="css/catalago-cliente.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">🎬 CINE_D&A</div>
+        <div class="user-panel">
+            <span id="lblCliente">Bienvenido, Cliente</span>
+            <span id="lblMembresia" class="badge-membership">Membresía: Estándar</span>
+            <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>Cartelera Disponible</h1>
+        <div class="movies-grid" id="contenedorPeliculas">
+            <!-- Las películas se cargarán dinámicamente -->
+        </div>
+    </div>
+
+    <!-- Modal para comprar entradas -->
+    <div class="modal" id="modalCompra">
+        <div class="modal-content">
+            <h3 id="modalTituloPelicula">Comprar Entradas</h3>
+            <p id="modalDetalleFuncion" style="margin: 0.8rem 0; color: #94a3b8;"></p>
+            
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.9rem;">Cantidad de Entradas:</label>
+            <input type="number" id="numEntradas" min="1" max="10" value="1" style="width: 100%; padding: 0.6rem; border-radius: 6px; background: #0f172a; color: white; border: 1px solid #334155;">
+            
+            <div style="margin-top: 1rem; font-weight: bold; font-size: 1.1rem; color: #38bdf8;">
+                Total a Pagar: S/ <span id="lblMontoTotal">0.00</span>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btnCerrarModal">Cancelar</button>
+                <button class="btn-confirm" id="btnConfirmarCompra">Confirmar Compra</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/catalogo-cliente.js"></script>
+</body>
+</html>
