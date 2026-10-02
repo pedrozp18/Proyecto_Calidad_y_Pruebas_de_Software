@@ -145,11 +145,12 @@ const bcrypt = require('bcryptjs');
 
 // Registro de Cliente con validación segura de contraseña
 app.post('/api/cliente/registro', async (req, res) => {
-    const { nombre, correo, password, dni } = req.body;
+    
+const { nombres, apellidoPaterno, apellidoMaterno, correo, dni, password } = req.body;
 
-    if (!nombre || !correo || !password || !dni) {
-        return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
-    }
+if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !password) {
+    return res.status(400).json({ error: "Todos los campos son obligatorios" });
+}
 
     // Validar contraseña en el servidor
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
