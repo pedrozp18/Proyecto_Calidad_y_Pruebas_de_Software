@@ -114,7 +114,9 @@ DROP TABLE IF EXISTS `cliente`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `cliente` (
   `id_cliente` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
+  `nombres` varchar(100) DEFAULT NULL,
+  `apellidoPaterno` varchar(100) DEFAULT NULL,
+  `apellidoMaterno` varchar(100) DEFAULT NULL,
   `correo` varchar(100) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
   `dni` varchar(15) DEFAULT NULL,
@@ -122,7 +124,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `correo` (`correo`),
   UNIQUE KEY `unique_dni` (`dni`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,7 +133,6 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
-INSERT INTO `cliente` VALUES (4,'Leon Davila','DSFSDFS@UPN.PE','$2b$10$tpXdPlRrUVbg4j26CD5DBOKr/vwUkDH6XlPyXpuj5WdZKa266H9wi','65165165','2026-09-23 21:07:03'),(5,'aramburu Lazo Claudio','a@q','$2b$10$3gQwQma6bwjCZDjvbD99kuIL4pzV.fotCzujC6L93CVnnlrhIzHB.','12345678','2026-09-23 21:41:37');
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -673,4 +674,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-02 15:02:54
+-- Dump completed on 2026-10-02 16:05:19
