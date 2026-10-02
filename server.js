@@ -145,12 +145,11 @@ const bcrypt = require('bcryptjs');
 
 // Registro de Cliente con validación segura de contraseña
 app.post('/api/cliente/registro', async (req, res) => {
-    
-const { nombres, apellidoPaterno, apellidoMaterno, correo, dni, password } = req.body;
+    const { nombres, apellidoPaterno, apellidoMaterno, correo, dni, password } = req.body;
 
-if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !password) {
-    return res.status(400).json({ error: "Todos los campos son obligatorios" });
-}
+    if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !password) {
+        return res.status(400).json({ error: "Todos los campos son obligatorios" });
+    }
 
     // Validar contraseña en el servidor
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
@@ -177,12 +176,14 @@ if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !pass
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
+            // Consulta de inserción con los 3 campos de nombre y apellidos
             const insertQuery = `
-                INSERT INTO cliente (nombre, correo, password_hash, dni) 
-                VALUES (?, ?, ?, ?)
+                INSERT INTO cliente (nombres, apellidoPaterno, apellidoMaterno, correo, password_hash, dni) 
+                VALUES (?, ?, ?, ?, ?, ?)
             `;
 
-            db.query(insertQuery, [nombre, correo, hashedPassword, dni], (errInsert, result) => {
+            // Se pasan las variables correspondientes en el arreglo de parámetros
+            db.query(insertQuery, [nombres, apellidoPaterno, apellidoMaterno, correo, hashedPassword, dni], (errInsert, result) => {
                 if (errInsert) {
                     console.error('Error al insertar cliente:', errInsert);
                     return res.status(500).json({ error: 'Error al registrar la cuenta.' });
