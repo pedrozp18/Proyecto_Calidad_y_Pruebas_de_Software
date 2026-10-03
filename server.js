@@ -145,13 +145,28 @@ const bcrypt = require('bcryptjs');
 
 // Registro de Cliente con validación segura de contraseña
 app.post('/api/cliente/registro', async (req, res) => {
-    const { nombres, apellidoPaterno, apellidoMaterno, correo, dni, password } = req.body;
+    
+    // 1. Extraer los datos limpiando espacios al inicio y al final con .trim()
+    const nombres = req.body.nombres ? req.body.nombres.trim() : '';
+    const apellidoPaterno = req.body.apellidoPaterno ? req.body.apellidoPaterno.trim() : '';
+    const apellidoMaterno = req.body.apellidoMaterno ? req.body.apellidoMaterno.trim() : '';
+    const correo = req.body.correo ? req.body.correo.trim() : '';
+    const dni = req.body.dni ? req.body.dni.trim() : '';
+    const password = req.body.password || '';
 
+    // 2. Validar que ningún campo esté vacío (después del trim)
     if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !password) {
-        return res.status(400).json({ error: "Todos los campos son obligatorios" });
+        return res.status(400).json({ error: "Todos los campos son obligatorios y no pueden contener solo espacios en blanco." });
     }
 
-    // Validar contraseña en el servidor
+    // 3. Validar longitud máxima de 100 caracteres
+    if (nombres.length > 100 || apellidoPaterno.length > 100 || apellidoMaterno.length > 100) {
+        return res.status(400).json({ 
+            error: "Los campos de nombres y apellidos no pueden superar los 100 caracteres." 
+        });
+    }
+
+    // 4. Validar contraseña en el servidor
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!passwordRegex.test(password)) {
         return res.status(400).json({ 
@@ -176,13 +191,11 @@ app.post('/api/cliente/registro', async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            // Consulta de inserción con los 3 campos de nombre y apellidos
             const insertQuery = `
                 INSERT INTO cliente (nombres, apellidoPaterno, apellidoMaterno, correo, password_hash, dni) 
                 VALUES (?, ?, ?, ?, ?, ?)
             `;
 
-            // Se pasan las variables correspondientes en el arreglo de parámetros
             db.query(insertQuery, [nombres, apellidoPaterno, apellidoMaterno, correo, hashedPassword, dni], (errInsert, result) => {
                 if (errInsert) {
                     console.error('Error al insertar cliente:', errInsert);
