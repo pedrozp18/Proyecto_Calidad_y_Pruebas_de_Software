@@ -901,6 +901,12 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-app.listen(3000, () => {
-    console.log('Servidor corriendo en http://localhost:3000');
-});
+// Solo se levanta el puerto si NO estamos ejecutando pruebas con Jest
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(3000, () => {
+        console.log('Servidor corriendo en http://localhost:3000');
+    });
+}
+
+// Exportación al final del archivo
+module.exports = app;
