@@ -909,4 +909,4 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Exportación al final del archivo
-module.exports = app;
+module.exports ={app,db};
