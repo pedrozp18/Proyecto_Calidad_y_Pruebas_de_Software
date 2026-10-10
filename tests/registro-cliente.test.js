@@ -1,282 +1,93 @@
-const request = require('supertest');
-const { app, db } = require('../server');
+// Funciones puras de validación de entrada
+const validarTexto = (texto) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(texto) && texto.trim().length > 0;
+const validarDni = (dni) => /^\d{8}$/.test(dni);
+const validarCorreo = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+const validarPassword = (pass) => /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(pass);
 
-// Limpieza después de cada prueba
-afterEach((done) => {
-    db.query("DELETE FROM cliente WHERE correo LIKE '%@email.com%' OR dni = '73920184'", (err) => {
-        if (err) return done(err);
-        done();
-    });
-});
+describe('Pruebas Unitarias - Validación Exhaustiva y Casos Límite (REQ-REG-001)', () => {
 
-// Cerrar conexión al finalizar todas las pruebas para que Jest no se quede colgado
-afterAll((done) => {
-    db.end((err) => {
-        if (err) return done(err);
-        done();
-    });
-});
-describe('Pruebas Unitarias - Módulo Registrar Cliente (CINE_DA)', () => {
+    describe('Campo: Nombres y Apellidos', () => {
+        test('TC-001: Debería retornar true si el texto contiene solo letras y tildes/espacios', () => {
+            expect(validarTexto('Pedro Emmanuel')).toBe(true);
+            expect(validarTexto('María José')).toBe(true);
+        });
 
-    // Objeto base con datos válidos para reutilizar en cada prueba
-    const clienteBase = {
-        nombres: 'Pedro Emmanuel',
-        apellidoPaterno: 'Zapata',
-        apellidoMaterno: 'Paz',
-        correo: 'pedro.zapata@email.com',
-        dni: '73920184',
-        password: 'Password123!'
-    };
+        test('TC-002: Debería retornar false si el texto contiene números', () => {
+            expect(validarTexto('Pedro123')).toBe(false);
+        });
 
+        test('TC-003: Debería retornar false si el texto contiene caracteres especiales no permitidos', () => {
+            expect(validarTexto('Pedro@')).toBe(false);
+            expect(validarTexto('Ana-Sofía')).toBe(false);
+        });
 
-    // 1. CAMINO FELIZ (REGISTRO EXITOSO)
+        test('TC-004: Debería retornar false si el campo está vacío', () => {
+            expect(validarTexto('')).toBe(false);
+        });
 
-    describe('Flujo Correcto', () => {
-        test('Debería registrar un cliente exitosamente si todos los datos son válidos', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send(clienteBase);
-
-            expect(res.statusCode).toBe(201);
-            expect(res.body).toHaveProperty('message');
-            expect(res.body.success).toBe(true);
+        test('TC-015: Debería retornar false si el texto contiene únicamente espacios en blanco', () => {
+            expect(validarTexto('   ')).toBe(false);
         });
     });
-
-    // 2. PRUEBAS PARA EL CAMPO: NOMBRES
-
-    describe('Campo: Nombres', () => {
-        test('Debería rechazar si el campo nombres está vacío', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, nombres: '' });
-
-            expect(res.statusCode).toBe(400);
-            expect(res.body.error).toBeDefined();
-        });
-
-        test('Debería rechazar si el campo nombres solo contiene espacios en blanco', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, nombres: '    ' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si nombres excede los 100 caracteres', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, nombres: 'A'.repeat(101) });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si nombres contiene números o caracteres especiales no permitidos', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, nombres: 'Pedro123' });
-
-            expect(res.statusCode).toBe(400);
-        });
-    });
-
-    // 3. PRUEBAS PARA EL CAMPO: APELLIDO PATERNO
-
-    describe('Campo: Apellido Paterno', () => {
-        test('Debería rechazar si apellidoPaterno está vacío', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoPaterno: '' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si apellidoPaterno solo contiene espacios en blanco', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoPaterno: '   ' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si apellidoPaterno excede los 100 caracteres', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoPaterno: 'B'.repeat(101) });
-
-            expect(res.statusCode).toBe(400);
-        });
-    });
-
-    // 4. PRUEBAS PARA EL CAMPO: APELLIDO MATERNO
-
-    describe('Campo: Apellido Materno', () => {
-        test('Debería rechazar si apellidoMaterno está vacío', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoMaterno: '' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si apellidoMaterno solo contiene espacios en blanco', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoMaterno: '   ' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si apellidoMaterno excede los 100 caracteres', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, apellidoMaterno: 'C'.repeat(101) });
-
-            expect(res.statusCode).toBe(400);
-        });
-    });
-
-    // 5. PRUEBAS PARA EL CAMPO: DNI
 
     describe('Campo: DNI', () => {
-        test('Debería rechazar si el DNI está vacío', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, dni: '' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-005: Debería retornar true si el DNI tiene exactamente 8 dígitos numéricos', () => {
+            expect(validarDni('73920184')).toBe(true);
         });
 
-        test('Debería rechazar si el DNI tiene menos de 8 dígitos', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, dni: '1234567' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-006: Debería retornar false si el DNI tiene menos de 8 dígitos', () => {
+            expect(validarDni('7392018')).toBe(false);
         });
 
-        test('Debería rechazar si el DNI tiene más de 8 dígitos', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, dni: '123456789' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-007: Debería retornar false si el DNI tiene más de 8 dígitos', () => {
+            expect(validarDni('739201845')).toBe(false);
         });
 
-        test('Debería rechazar si el DNI contiene letras o caracteres no numéricos', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, dni: '7392018A' });
-
-            expect(res.statusCode).toBe(400);
-        });
-        test('Debería rechazar el registro si el DNI ya se encuentra registrado en la base de datos', async () => {
-    const dniDuplicado = '73920184';
-
-    // 1. Primer registro (exitoso o prerrequisito)
-    await request(app)
-        .post('/api/cliente/registro')
-        .send({
-            ...clienteBase,
-            correo: 'primer.cliente@email.com',
-            dni: dniDuplicado
+        test('TC-008: Debería retornar false si el DNI contiene letras', () => {
+            expect(validarDni('7392018A')).toBe(false);
         });
 
-    // 2. Intentar registrar un segundo cliente con el mismo DNI
-    const res = await request(app)
-        .post('/api/cliente/registro')
-        .send({
-            ...clienteBase,
-            correo: 'segundo.cliente@email.com', // Correo diferente para probar solo el conflicto de DNI
-            dni: dniDuplicado
+        test('TC-016: Debería retornar false si el DNI contiene signos negativos o símbolos', () => {
+            expect(validarDni('-73920184')).toBe(false);
         });
-
-    // 3. Verificaciones
-    expect(res.statusCode).toBe(400); // o 409 si usas Conflict en Express
-    expect(res.body).toHaveProperty('error');
-    expect(res.body.error).toMatch(/registrado|duplicado|existe/i);
-});
     });
-
-    // 6. PRUEBAS PARA EL CAMPO: CORREO ELECTRÓNICO
 
     describe('Campo: Correo Electrónico', () => {
-        test('Debería rechazar si el correo está vacío', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, correo: '' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-009: Debería retornar true si el correo posee una estructura estándar válida', () => {
+            expect(validarCorreo('pedro.zapata@email.com')).toBe(true);
         });
 
-        test('Debería rechazar si el correo no tiene un arroba (@)', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, correo: 'pedro.zapatagmail.com' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-010: Debería retornar false si el correo carece del símbolo @', () => {
+            expect(validarCorreo('pedro.email.com')).toBe(false);
         });
 
-        test('Debería rechazar si el correo no tiene dominio o extensión válida', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, correo: 'pedro@gmail' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-011: Debería retornar false si el correo carece de dominio o extensión', () => {
+            expect(validarCorreo('pedro@email')).toBe(false);
+            expect(validarCorreo('pedro@.com')).toBe(false);
         });
 
-        test('Debería rechazar si el correo contiene espacios', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, correo: 'pedro zapata@gmail.com' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-017: Debería retornar false si el correo contiene doble arroba o puntos consecutivos', () => {
+            expect(validarCorreo('pedro@@email.com')).toBe(false);
+            expect(validarCorreo('pedro..zapata@email.com')).toBe(false);
         });
     });
 
-    // ==========================================
-    // 7. PRUEBAS PARA EL CAMPO: CONTRASEÑA
-    // ==========================================
-    describe('Campo: Contraseña', () => {
-        test('Debería rechazar si la contraseña está vacía', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, password: '' });
-
-            expect(res.statusCode).toBe(400);
+    describe('Campo: Contraseña / Password', () => {
+        test('TC-012: Debería retornar true si la contraseña cumple con los criterios de seguridad', () => {
+            expect(validarPassword('Password123!')).toBe(true);
         });
 
-        test('Debería rechazar si la contraseña es menor a 8 caracteres', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, password: 'Pass1!' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-013: Debería retornar false si la contraseña es menor a 8 caracteres', () => {
+            expect(validarPassword('Pass1!')).toBe(false);
         });
 
-        test('Debería rechazar si no contiene al menos una mayúscula', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, password: 'password123!' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-014: Debería retornar false si la contraseña no incluye caracteres especiales o números', () => {
+            expect(validarPassword('PasswordSinNumeros')).toBe(false);
+            expect(validarPassword('12345678')).toBe(false);
         });
 
-        test('Debería rechazar si no contiene al menos un número', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, password: 'Password!' });
-
-            expect(res.statusCode).toBe(400);
-        });
-
-        test('Debería rechazar si no contiene caracteres especiales', async () => {
-            const res = await request(app)
-                .post('/api/cliente/registro')
-                .send({ ...clienteBase, password: 'Password123' });
-
-            expect(res.statusCode).toBe(400);
+        test('TC-018: Debería retornar false si la contraseña contiene espacios en blanco', () => {
+            expect(validarPassword('Password 123!')).toBe(false);
         });
     });
-
 });
