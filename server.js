@@ -9,22 +9,29 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// 1. Configuración de la conexión a TU base de datos
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'CineProyecto_2026!', 
-    database: 'cine_upn_db'
-});
+// 1. Configuración condicional de la base de datos para pruebas unitarias
+let db;
 
-db.connect((err) => {
-    if (err) {
-        console.error('❌ Error de conexión a MySQL:', err);
-        return;
-    }
-    console.log('🚀 ¡Conectado con éxito a la base de datos cine_upn_db!');
-});
+if (process.env.NODE_ENV === 'test') {
+    // Si estamos en pruebas con Jest, creamos un objeto falso (mock) para que no intente conectar
+    db = { query: () => {}, end: () => {} };
+} else {
+    // Si es ejecución normal, se conecta a tu base de datos real
+    db = mysql.createConnection({
+        host: 'localhost',
+        user: 'root',
+        password: 'CineProyecto_2026!', 
+        database: 'cine_upn_db'
+    });
 
+    db.connect((err) => {
+        if (err) {
+            console.error('❌ Error al conectar a la BD:', err);
+            return;
+        }
+        console.log('🚀 ¡Conectado con éxito a la base de datos!');
+    });
+}
 // =========================================================================
 // RUTAS DE MÓDULO PROGRAMACIÓN
 // =========================================================================
@@ -143,10 +150,51 @@ app.post('/api/login', (req, res) => {
 });
 const bcrypt = require('bcryptjs');
 
-// Registro de Cliente con validación segura de contraseña
+// ==========================================
+// 1. FUNCIONES PURAS DE VALIDACIÓN INDIVIDUALES
+// ==========================================
+const validarNombres = (nombres) => {
+    if (!nombres || typeof nombres !== 'string') return false;
+    const limpio = nombres.trim();
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,100}$/.test(limpio);
+};
+
+const validarApellidoPaterno = (apellidoPaterno) => {
+    if (!apellidoPaterno || typeof apellidoPaterno !== 'string') return false;
+    const limpio = apellidoPaterno.trim();
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,100}$/.test(limpio);
+};
+
+const validarApellidoMaterno = (apellidoMaterno) => {
+    if (!apellidoMaterno || typeof apellidoMaterno !== 'string') return false;
+    const limpio = apellidoMaterno.trim();
+    return /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,100}$/.test(limpio);
+};
+
+const validarDni = (dni) => {
+    if (!dni || typeof dni !== 'string') return false;
+    const limpio = dni.trim();
+    return /^\d{8}$/.test(limpio);
+};
+
+const validarCorreo = (correo) => {
+    if (!correo || typeof correo !== 'string') return false;
+    const limpio = correo.trim();
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(limpio);
+};
+
+const validarPassword = (password) => {
+    if (!password || typeof password !== 'string') return false;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    return passwordRegex.test(password);
+};
+
+
+// ==========================================
+// 2. ENDPOINT DE REGISTRO
+// ==========================================
 app.post('/api/cliente/registro', async (req, res) => {
     
-    // 1. Extraer los datos limpiando espacios al inicio y al final con .trim()
     const nombres = req.body.nombres ? req.body.nombres.trim() : '';
     const apellidoPaterno = req.body.apellidoPaterno ? req.body.apellidoPaterno.trim() : '';
     const apellidoMaterno = req.body.apellidoMaterno ? req.body.apellidoMaterno.trim() : '';
@@ -154,21 +202,33 @@ app.post('/api/cliente/registro', async (req, res) => {
     const dni = req.body.dni ? req.body.dni.trim() : '';
     const password = req.body.password || '';
 
-    // 2. Validar que ningún campo esté vacío (después del trim)
+    // Validar vacíos
     if (!nombres || !apellidoPaterno || !apellidoMaterno || !correo || !dni || !password) {
         return res.status(400).json({ error: "Todos los campos son obligatorios y no pueden contener solo espacios en blanco." });
     }
 
-    // 3. Validar longitud máxima de 100 caracteres
-    if (nombres.length > 100 || apellidoPaterno.length > 100 || apellidoMaterno.length > 100) {
-        return res.status(400).json({ 
-            error: "Los campos de nombres y apellidos no pueden superar los 100 caracteres." 
-        });
+    // Validaciones usando las funciones independientes
+    if (!validarNombres(nombres)) {
+        return res.status(400).json({ error: "El campo Nombres debe tener entre 2 y 100 caracteres y contener solo letras." });
     }
 
-    // 4. Validar contraseña en el servidor
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-    if (!passwordRegex.test(password)) {
+    if (!validarApellidoPaterno(apellidoPaterno)) {
+        return res.status(400).json({ error: "El Apellido Paterno debe tener entre 2 y 100 caracteres y contener solo letras." });
+    }
+
+    if (!validarApellidoMaterno(apellidoMaterno)) {
+        return res.status(400).json({ error: "El Apellido Materno debe tener entre 2 y 100 caracteres y contener solo letras." });
+    }
+
+    if (!validarDni(dni)) {
+        return res.status(400).json({ error: "El DNI debe contener exactamente 8 dígitos numéricos." });
+    }
+
+    if (!validarCorreo(correo)) {
+        return res.status(400).json({ error: "El formato del correo electrónico no es válido." });
+    }
+
+    if (!validarPassword(password)) {
         return res.status(400).json({ 
             error: 'La contraseña es débil. Debe tener mínimo 8 caracteres, una mayúscula, una minúscula y un número.' 
         });
@@ -909,4 +969,13 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Exportación al final del archivo
-module.exports ={app,db};
+module.exports = {
+    app,
+    db,
+    validarNombres,
+    validarApellidoPaterno,
+    validarApellidoMaterno,
+    validarDni,
+    validarCorreo,
+    validarPassword
+};
