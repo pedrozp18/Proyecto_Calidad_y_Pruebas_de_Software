@@ -8,9 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Cargar datos de la cabecera
-    document.getElementById("lblCliente").textContent = `Hola, ${clienteSesion.nombre}`;
-    document.getElementById("lblMembresia").textContent = `Membresía: ${clienteSesion.tipoMembresia || 'Estándar'}`;
+    // Cargar datos de la cabecera (buscando varias alternativas por si el campo tiene otro nombre)
+    const nombreCliente = clienteSesion.nombre || clienteSesion.nombres || clienteSesion.usuario || "Cliente";
+    const tipoMembresia = clienteSesion.tipoMembresia || clienteSesion.membresia || 'Estándar';
+
+    document.getElementById("lblCliente").textContent = `Hola, ${nombreCliente}`;
+    document.getElementById("lblMembresia").textContent = `Membresía: ${tipoMembresia}`;
 
     // Cargar Catálogo
     cargarCartelera();

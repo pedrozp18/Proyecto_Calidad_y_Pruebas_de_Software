@@ -1,37 +1,35 @@
 /**
  * server.js - Servidor Backend integrado
  */
+
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-// 1. Configuración condicional de la base de datos para pruebas unitarias
-let db;
+// Conexión real a MySQL en todo momento para permitir pruebas de integración con la BD
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '', 
+    database: 'cine_upn_db',
+    charset: 'utf8mb4',
+    supportBigNumbers: true, // <-- Esto evita que mysql2 forze la negociación con codificaciones externas problemáticas
+    bigNumberStrings: true
+});
 
-if (process.env.NODE_ENV === 'test') {
-    // Si estamos en pruebas con Jest, creamos un objeto falso (mock) para que no intente conectar
-    db = { query: () => {}, end: () => {} };
-} else {
-    // Si es ejecución normal, se conecta a tu base de datos real
-    db = mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: 'CineProyecto_2026!', 
-        database: 'cine_upn_db'
-    });
+db.connect((err) => {
+    if (err) {
+        console.error('❌ Error al conectar a la BD:', err);
+        return;
+    }
+    console.log('🚀 ¡Conectado con éxito a la base de datos!');
+});
 
-    db.connect((err) => {
-        if (err) {
-            console.error('❌ Error al conectar a la BD:', err);
-            return;
-        }
-        console.log('🚀 ¡Conectado con éxito a la base de datos!');
-    });
-}
 // =========================================================================
 // RUTAS DE MÓDULO PROGRAMACIÓN
 // =========================================================================
@@ -109,7 +107,37 @@ app.get('/api/funciones', (req, res) => {
         res.json(results);
     });
 });
+// =========================================================================
+// ENDPOINT DE CARTELERA PARA EL CLIENTE (/api/cartelera)
+// =========================================================================
+app.get('/api/cartelera', (req, res) => {
+    const queryPeliculas = "SELECT idPelicula, titulo, duracion, genero, sipnosis, imagenPoster AS imagen FROM Pelicula";
+    
+    db.query(queryPeliculas, (err, peliculas) => {
+        if (err) return res.status(500).json({ error: err.message });
 
+        const queryFunciones = `
+            SELECT f.idFuncion, f.idPelicula, f.horarioInicio AS horario, f.precioBase AS precio, s.idSala, s.tipoSala AS numeroSala 
+            FROM Funcion f
+            JOIN Sala s ON f.idSala = s.idSala
+            WHERE f.estado = 'Disponible'
+        `;
+
+        db.query(queryFunciones, (err, funciones) => {
+            if (err) return res.status(500).json({ error: err.message });
+
+            // Combinar cada película con sus respectivas funciones programadas
+            const cartelera = peliculas.map(pelicula => {
+                return {
+                    ...pelicula,
+                    funciones: funciones.filter(f => f.idPelicula === pelicula.idPelicula)
+                };
+            });
+
+            res.json(cartelera);
+        });
+    });
+});
 // =========================================================================
 // MÓDULO DE ACCESO / LOGIN (ACTUALIZADO A TABLA ROL)
 // =========================================================================

@@ -27,9 +27,14 @@ document.getElementById('btnLogin').addEventListener('click', async () => {
 
         if (response.ok) {
             alert("¡Login correcto!");
+            
+            
+            localStorage.setItem("cliente_sesion", JSON.stringify(data.usuario || data));
+            
             // Redirige a la vista correspondiente
             window.location.href = 'catalogo-cliente.html'; 
-        } else {
+        }
+        else {
             alert(data.error || "Credenciales incorrectas.");
         }
     } catch (error) {
