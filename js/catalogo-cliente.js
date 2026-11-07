@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // Cargar datos de la cabecera (buscando varias alternativas por si el campo tiene otro nombre)
+    // Cargar datos de la cabecera
     const nombreCliente = clienteSesion.nombre || clienteSesion.nombres || clienteSesion.usuario || "Cliente";
     const tipoMembresia = clienteSesion.tipoMembresia || clienteSesion.membresia || 'Estándar';
 
@@ -26,7 +26,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 let funcionSeleccionada = null;
-let precioBase = 15.00; // Precio por entrada en soles
 
 async function cargarCartelera() {
     try {
@@ -36,13 +35,31 @@ async function cargarCartelera() {
         contenedor.innerHTML = "";
 
         peliculas.forEach(pelicula => {
+            // Mapeo limpio sin caracteres erróneos
             let opcionesFunciones = pelicula.funciones.map(f => 
-                `<option value="${f.idFuncion}">${f.horario} - Sala ${f.numeroSala} (S/ ${f.precio})</option>`
+                `<option value="${f.idFuncion}" data-precio="${f.precio}">${f.horario} - Sala ${f.numeroSala} (S/ ${f.precio})</option>`
             ).join("");
+
+            // Validación de la ruta de la imagen
+            let rawImagen = pelicula.imagen || pelicula.imagenPoster;
+            let rutaImagen = '';
+
+            if (!rawImagen) {
+                rutaImagen = 'https://via.placeholder.com/300x400?text=Sin+Imagen';
+            } else if (rawImagen.startsWith('http')) {
+                rutaImagen = rawImagen;
+            } else if (rawImagen.startsWith('img/')) {
+                rutaImagen = rawImagen;
+            } else {
+                rutaImagen = `img/${rawImagen}`;
+            }
 
             contenedor.innerHTML += `
                 <div class="movie-card">
-                    <img src="${pelicula.imagen || 'https://via.placeholder.com/300x400'}" class="movie-poster" alt="${pelicula.titulo}">
+                    <img src="${rutaImagen}" 
+                         class="movie-poster" 
+                         alt="${pelicula.titulo}"
+                         onerror="this.src='https://via.placeholder.com/300x400?text=Sin+Imagen'">
                     <div class="movie-info">
                         <div class="movie-title">${pelicula.titulo}</div>
                         <div class="movie-genre">${pelicula.genero} | ${pelicula.duracion} min</div>
@@ -73,13 +90,16 @@ function abrirModalCompra(idPelicula, titulo) {
         return;
     }
 
-    funcionSeleccionada = { idFuncion, titulo, precio: precioBase };
+    const optionSelected = select.options[select.selectedIndex];
+    const precioFuncion = parseFloat(optionSelected.getAttribute("data-precio")) || 18.00;
+
+    funcionSeleccionada = { idFuncion, titulo, precio: precioFuncion };
     
     document.getElementById("modalTituloPelicula").textContent = titulo;
-    document.getElementById("modalDetalleFuncion").textContent = select.options[select.selectedIndex].text;
+    document.getElementById("modalDetalleFuncion").textContent = optionSelected.text;
     document.getElementById("numEntradas").value = 1;
+    
     actualizarTotal();
-
     document.getElementById("modalCompra").style.display = "flex";
 }
 
@@ -87,7 +107,8 @@ document.getElementById("numEntradas").addEventListener("input", actualizarTotal
 
 function actualizarTotal() {
     const cantidad = parseInt(document.getElementById("numEntradas").value) || 1;
-    const total = cantidad * precioBase;
+    const precioActual = funcionSeleccionada ? funcionSeleccionada.precio : 15.00;
+    const total = cantidad * precioActual;
     document.getElementById("lblMontoTotal").textContent = total.toFixed(2);
 }
 

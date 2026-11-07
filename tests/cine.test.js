@@ -263,30 +263,38 @@ describe('Módulo de Taquilla: Validación de DNI, Procesamiento y Controles (TC
 describe('Módulo de Taquilla y Programación: Procesamiento, Ocupación y Funciones (TC-025 a TC-028)', () => {
 
     test('TC-025: venta_presencial_pago_dni_vacio', async () => {
-        const respuesta = await request(app).post('/api/ventas/procesar').send({
+    const respuesta = await request(app)
+        .post('/api/ventas/procesar')
+        .send({
             idSesionCaja: 1,
             idFuncion: 1,
-            dniCliente: "",
-            subtotal: 18.00,
+            dniCliente: "", // Vacío
+            subtotal: 36.00,
             descuento: 0.00,
-            totalNeto: 18.00,
+            totalNeto: 36.00,
             asientos: ["A1"]
         });
-        expect([400, 500]).toContain(respuesta.status);
-    }, 10000);
+    
+    // ESTRICTO: Debe rechazar con 400 (Bad Request). NUNCA aceptar 500.
+    expect(respuesta.status).toBe(400);
+});
 
     test('TC-026: venta_presencial_pago_dni_valido', async () => {
-        const respuesta = await request(app).post('/api/ventas/procesar').send({
+    const respuesta = await request(app)
+        .post('/api/ventas/procesar')
+        .send({
             idSesionCaja: 1,
             idFuncion: 1,
             dniCliente: "12345678",
             subtotal: 18.00,
             descuento: 0.00,
             totalNeto: 18.00,
-            asientos: ["A1"]
+            asientos: ["A2"]
         });
-        expect([200, 201, 500]).toContain(respuesta.status);
-    }, 10000);
+    
+    // ESTRICTO: Solo se acepta 200 o 201 como éxito real
+    expect([200, 201]).toContain(respuesta.status);
+});
 
     test('TC-027: venta_presencial_asiento_ocupado', async () => {
         const idFuncionPrueba = 1;

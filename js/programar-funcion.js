@@ -73,16 +73,46 @@ function listarFunciones() {
             tbody.innerHTML = ""; 
 
             data.forEach(f => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${f.titulo}</td>
-                    <td>Sala ${f.idSala}</td>
-                    <td>${f.fecha.split('T')[0]} <br> <small>${f.horarioInicio}</small></td>
-                    <td>S/ ${parseFloat(f.precioBase).toFixed(2)}</td>
-                    <td><span class="badge" style="background:#10b981; color:white; padding:2px 6px; border-radius:4px;">${f.estado}</span></td>
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${f.titulo}</td>
+                        <td>Sala ${f.idSala}</td>
+                        <td>${f.fecha.split('T')[0]}<br>${f.horarioInicio}</td>
+                        <td>S/ ${parseFloat(f.precioBase).toFixed(2)}</td>
+                        <td><span class="badge ${f.estado ? f.estado.toLowerCase() : 'disponible'}">${f.estado || 'Disponible'}</span></td>
+                        <td>
+                            <button onclick="eliminarFuncion(${f.idFuncion})" style="background: #e74c3c; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer;" title="Eliminar función">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
             });
         })
         .catch(err => console.error("Error al listar funciones:", err));
+}
+window.eliminarFuncion = async function(idFuncion) {
+    if (!idFuncion) {
+        alert("[ERROR] El ID de la función es inválido o no se ha cargado.");
+        return;
+    }
+
+    if (confirm("¿Estás seguro de eliminar esta función de la cartelera?")) {
+        try {
+            const res = await fetch(`http://localhost:3000/api/funciones/${idFuncion}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(data.message || "Función eliminada correctamente.");
+                listarFunciones(); // Recarga la tabla dinámicamente sin recargar toda la página
+            } else {
+                alert(data.error || "No se pudo eliminar la función.");
+            }
+        } catch (error) {
+            console.error("Error al eliminar:", error);
+            alert("Error de conexión con el servidor.");
+        }
+    }
 }

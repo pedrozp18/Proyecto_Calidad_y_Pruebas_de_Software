@@ -5,9 +5,13 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const path = require('path');
+
+// Coloca esto en tu server.js
 
 const app = express();
 app.use(express.json());
+app.use('/img', express.static(path.join(__dirname, 'img')));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
@@ -15,7 +19,7 @@ app.use(cors());
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: '', 
+    password: 'CineProyecto_2026!', 
     database: 'cine_upn_db',
     charset: 'utf8mb4',
     supportBigNumbers: true, // <-- Esto evita que mysql2 forze la negociación con codificaciones externas problemáticas
@@ -98,10 +102,11 @@ app.post('/api/funciones', (req, res) => {
 // D. LISTAR FUNCIONES (Para la tabla)
 app.get('/api/funciones', (req, res) => {
     const query = `
-        SELECT f.idPelicula, p.titulo, f.idSala, f.fecha, f.horarioInicio, f.precioBase, f.estado 
+        SELECT f.idFuncion, f.idPelicula, p.titulo, f.idSala, f.fecha, f.horarioInicio, f.precioBase, f.estado 
         FROM Funcion f
         JOIN Pelicula p ON f.idPelicula = p.idPelicula
         ORDER BY f.fecha DESC`;
+        
     db.query(query, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
@@ -111,7 +116,8 @@ app.get('/api/funciones', (req, res) => {
 // ENDPOINT DE CARTELERA PARA EL CLIENTE (/api/cartelera)
 // =========================================================================
 app.get('/api/cartelera', (req, res) => {
-    const queryPeliculas = "SELECT idPelicula, titulo, duracion, genero, sipnosis, imagenPoster AS imagen FROM Pelicula";
+    // 💡 Agregamos CAST(... AS CHAR) para que llegue como texto plano y no como Buffer
+    const queryPeliculas = "SELECT idPelicula, titulo, duracion, genero, sipnosis, CAST(imagenPoster AS CHAR) AS imagen FROM Pelicula";
     
     db.query(queryPeliculas, (err, peliculas) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -126,7 +132,6 @@ app.get('/api/cartelera', (req, res) => {
         db.query(queryFunciones, (err, funciones) => {
             if (err) return res.status(500).json({ error: err.message });
 
-            // Combinar cada película con sus respectivas funciones programadas
             const cartelera = peliculas.map(pelicula => {
                 return {
                     ...pelicula,
@@ -136,6 +141,21 @@ app.get('/api/cartelera', (req, res) => {
 
             res.json(cartelera);
         });
+    });
+});
+app.delete('/api/funciones/:id', (req, res) => {
+    const { id } = req.params;
+    const query = "DELETE FROM Funcion WHERE idFuncion = ?";
+    
+    db.query(query, [id], (err, result) => {
+        if (err) {
+            // Si hay entradas vendidas asociadas, MySQL lanzará error de llave foránea
+            if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+                return res.status(400).json({ error: "No se puede eliminar la función porque ya tiene entradas vendidas asociadas." });
+            }
+            return res.status(500).json({ error: err.message });
+        }
+        res.json({ success: true, message: 'Función eliminada correctamente de la cartelera.' });
     });
 });
 // =========================================================================
@@ -668,9 +688,13 @@ app.get('/api/ventas/asientos-ocupados/:idFuncion', (req, res) => {
     });
 });
 
-// C. RUTA CORREGIDA: PROCESAR VENTA PRESENCIAL (Sincronizada con tu SQL Real)
+// C. RUTA CORREGIDA Y ADAPTADA A TU BASE DE DATOS
 app.post('/api/ventas/procesar', (req, res) => {
     const { idSesionCaja, idFuncion, dniCliente, subtotal, descuento, totalNeto, asientos } = req.body;
+
+    if (!dniCliente || dniCliente.trim() === "") {
+        return res.status(400).json({ error: "El DNI del cliente es obligatorio." });
+    }
 
     if (!idFuncion || !asientos || asientos.length === 0) {
         return res.status(400).json({ error: 'Faltan datos obligatorios para la transacción.' });
@@ -679,55 +703,66 @@ app.post('/api/ventas/procesar', (req, res) => {
     const horaActual = new Date().toLocaleTimeString('es-PE', { hour12: false }).substring(0, 5);
     const fechaHoraActual = new Date();
 
-    // Iniciamos transacción transaccional en MySQL
     db.beginTransaction((errTx) => {
         if (errTx) return res.status(500).json({ error: errTx.message });
 
-        // 1. Buscamos si el cliente existe por su DNI para obtener su 'idCliente' numérico
-        db.query("SELECT idCliente FROM Cliente WHERE dniCliente = ?", [dniCliente], (errCli, rows) => {
-            if (errCli) return db.rollback(() => res.status(500).json({ error: errCli.message }));
+        // 1. Verificar concurrencia de asientos con FOR UPDATE
+        const queryVerificarConcurrencia = `
+            SELECT item_comprado FROM detalle_venta 
+            WHERE idFuncion = ? AND item_comprado IN (${asientos.map(a => `'Entrada - Butaca ${a}'`).join(',')})
+            FOR UPDATE
+        `;
 
-            // Si el cliente no existe en la tabla, se pasa NULL (Venta como invitado)
-            const idClienteReal = rows.length > 0 ? rows[0].idCliente : null;
+        db.query(queryVerificarConcurrencia, [idFuncion], (errConcurrencia, ocupados) => {
+            if (errConcurrencia) {
+                return db.rollback(() => res.status(500).json({ error: errConcurrencia.message }));
+            }
 
-            // 2. Insertar en la tabla 'Venta' mapeando tus campos reales
-            const queryVenta = `INSERT INTO Venta (idCliente, fechaHora, cantidadBoletos, montoBruto, montoDescuento, montoTotalNeto, tipoVenta, estado) 
-                                VALUES (?, ?, ?, ?, ?, ?, 'Taquilla', 'Completada')`;
-            
-            db.query(queryVenta, [idClienteReal, fechaHoraActual, asientos.length, subtotal, descuento, totalNeto], (errVenta, resVenta) => {
-                if (errVenta) return db.rollback(() => res.status(500).json({ error: errVenta.message }));
+            if (ocupados.length > 0) {
+                return db.rollback(() => {
+                    res.status(400).json({ error: `Asientos ya ocupados.` });
+                });
+            }
 
-                const idVenta = resVenta.insertId;
+            // 2. Buscar cliente por DNI (probando ambas variantes de nombres de columnas por seguridad)
+            db.query("SELECT id_cliente AS idCliente FROM Cliente WHERE dni = ? UNION SELECT idCliente FROM Cliente WHERE dni = ?", [dniCliente, dniCliente], (errCli, rows) => {
+                if (errCli) return db.rollback(() => res.status(500).json({ error: errCli.message }));
 
-                // 3. Insertar el Movimiento Financiero en la Caja Activa
-                const queryMov = `INSERT INTO Movimiento_de_caja (idSesionCaja, idVenta, tipoMovimiento, monto, hora) 
-                                  VALUES (?, ?, 'INGRESO POR VENTA', ?, ?)`;
+                // Si el cliente no existe, puedes dejarlo en null o insertarlo genéricamente para que no dé error 500
+                const idClienteReal = rows.length > 0 ? (rows[0].idCliente || rows[0].id_cliente) : null;
 
-                db.query(queryMov, [idSesionCaja, idVenta, totalNeto, horaActual], (errMov) => {
-                    if (errMov) return db.rollback(() => res.status(500).json({ error: errMov.message }));
+                const queryVenta = `INSERT INTO Venta (idCliente, fechaHora, cantidadBoletos, montoBruto, montoDescuento, montoTotalNeto, tipoVenta, estado) 
+                                    VALUES (?, ?, ?, ?, ?, ?, 'Taquilla', 'Completada')`;
+                
+                db.query(queryVenta, [idClienteReal, fechaHoraActual, asientos.length, subtotal, descuento, totalNeto], (errVenta, resVenta) => {
+                    if (errVenta) return db.rollback(() => res.status(500).json({ error: errVenta.message }));
 
-                    // 4. Insertar los boletos seleccionados en 'detalle_venta' uno por uno
-                    const queryDetalle = `INSERT INTO detalle_venta (idVenta, idFuncion, idAsiento, item_comprado, montoPagado, vuelto) VALUES ?`;
-                    
-                    // Como tus asientos en el Front son strings ('A1', 'B2') y en tu base de datos la tabla 'detalle_venta' 
-                    // espera un ID numérico de asiento o un campo nulo, mandaremos temporalmente NULL en idAsiento 
-                    // guardando el código de la butaca en 'item_comprado' para que no rompa las FK.
-                    const valoresDetalle = asientos.map(butaca => [
-                        idVenta, 
-                        idFuncion, 
-                        null, 
-                        `Entrada - Butaca ${butaca}`, 
-                        (totalNeto / asientos.length), 
-                        0.00
-                    ]);
+                    const idVenta = resVenta.insertId;
 
-                    db.query(queryDetalle, [valoresDetalle], (errDet) => {
-                        if (errDet) return db.rollback(() => res.status(500).json({ error: errDet.message }));
+                    const queryMov = `INSERT INTO Movimiento_de_caja (idSesionCaja, idVenta, tipoMovimiento, monto, hora) 
+                                      VALUES (?, ?, 'INGRESO POR VENTA', ?, ?)`;
 
-                        // Confirmamos la transacción completa en la base de datos
-                        db.commit((errCommit) => {
-                            if (errCommit) return db.rollback(() => res.status(500).json({ error: errCommit.message }));
-                            res.json({ success: true, message: 'Venta registrada con éxito en MySQL.', idVenta });
+                    db.query(queryMov, [idSesionCaja, idVenta, totalNeto, horaActual], (errMov) => {
+                        if (errMov) return db.rollback(() => res.status(500).json({ error: errMov.message }));
+
+                        const queryDetalle = `INSERT INTO detalle_venta (idVenta, idFuncion, idAsiento, item_comprado, montoPagado, vuelto) VALUES ?`;
+                        
+                        const valoresDetalle = asientos.map(butaca => [
+                            idVenta, 
+                            idFuncion, 
+                            null, 
+                            `Entrada - Butaca ${butaca}`, 
+                            (totalNeto / asientos.length), 
+                            0.00
+                        ]);
+
+                        db.query(queryDetalle, [valoresDetalle], (errDet) => {
+                            if (errDet) return db.rollback(() => res.status(500).json({ error: errDet.message }));
+
+                            db.commit((errCommit) => {
+                                if (errCommit) return db.rollback(() => res.status(500).json({ error: errCommit.message }));
+                                res.json({ success: true, message: 'Venta registrada con éxito.', idVenta });
+                            });
                         });
                     });
                 });
