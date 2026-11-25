@@ -33,6 +33,65 @@
         }
         .leyenda-item { display: flex; align-items: center; gap: 6px; }
         .leyenda-box { width: 15px; height: 15px; border-radius: 4px; }
+
+        /* Estilos para Confitería, Combos, Pop Corn, Bebidas y Snacks */
+        .confiteria-tabs {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px;
+        }
+        .tab-confi {
+            background-color: var(--bg-deep); color: var(--text-muted);
+            border: 1px solid var(--border-color); padding: 7px 14px;
+            border-radius: 20px; font-size: 0.82rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .tab-confi.active, .tab-confi:hover {
+            background-color: var(--cine-red, #ef4444); color: #fff;
+            border-color: transparent;
+        }
+        .grid-confiteria {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 14px;
+        }
+        .item-confiteria {
+            background-color: var(--bg-deep); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 12px; display: flex;
+            flex-direction: column; justify-content: space-between; gap: 10px;
+        }
+        .item-confi-header {
+            display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+        }
+        .item-confi-titulo {
+            font-weight: 700; font-size: 0.9rem; color: var(--text-white);
+        }
+        .item-confi-desc {
+            font-size: 0.76rem; color: var(--text-muted); margin-top: 3px;
+        }
+        .item-confi-precio {
+            font-weight: 800; font-size: 0.9rem; color: var(--cine-green, #10b981);
+            white-space: nowrap;
+        }
+        .qty-controls {
+            display: flex; align-items: center; justify-content: space-between;
+            background-color: rgba(15, 23, 42, 0.6); padding: 6px 10px;
+            border-radius: 6px; border: 1px solid var(--border-color);
+        }
+        .btn-qty {
+            width: 28px; height: 28px; border-radius: 6px; border: none;
+            background-color: #334155; color: #fff; font-weight: bold;
+            cursor: pointer; transition: background 0.15s;
+        }
+        .btn-qty:hover:not(:disabled) { background-color: #475569; }
+        .btn-qty:disabled { opacity: 0.4; cursor: not-allowed; }
+        .qty-valor { font-weight: 700; font-size: 0.9rem; min-width: 24px; text-align: center; }
+        .bloqueo-aviso {
+            background-color: rgba(245, 158, 11, 0.12); border: 1px dashed #f59e0b;
+            color: #fcd34d; padding: 12px 14px; border-radius: 8px;
+            font-size: 0.85rem; margin-bottom: 14px;
+        }
+        .resumen-confi-lista {
+            font-size: 0.82rem; color: var(--text-muted);
+            display: flex; flex-direction: column; gap: 4px;
+        }
     </style>
 </head>
 <body>
@@ -62,7 +121,7 @@
         <!-- Layout Central de Venta: Dos Columnas Inteligentes -->
         <div style="display: grid; grid-template-columns: 1.6fr 1.1fr; gap: 25px; align-items: start;">
             
-            <!-- COLUMNA IZQUIERDA: Configuración y Mapa de Asientos -->
+            <!-- COLUMNA IZQUIERDA: Configuración, Mapa de Asientos y Confitería -->
             <div>
                 <!-- Panel de Selección de Función -->
                 <div class="card-panel">
@@ -101,6 +160,27 @@
                         <div class="leyenda-item"><div class="leyenda-box" style="background-color: #ef4444;"></div> Seleccionado</div>
                     </div>
                 </div>
+
+                <!-- Panel de Confitería: Combos, Pop Corn, Bebidas y Snacks -->
+                <div class="card-panel" id="panel-confiteria" style="margin-top: 25px;">
+                    <div class="panel-title"><i class="fa-solid fa-popcorn"></i> Confitería: Combos, Pop Corn, Bebidas y Snacks</div>
+
+                    <div class="bloqueo-aviso" id="aviso-seleccionar-asientos">
+                        <i class="fa-solid fa-circle-info"></i> Selecciona al menos <strong>1 asiento</strong> en la sala para habilitar y agregar combos o productos de confitería.
+                    </div>
+
+                    <!-- Filtros de categoría -->
+                    <div class="confiteria-tabs" id="tabs-confiteria">
+                        <button type="button" class="tab-confi active" data-categoria="todos">Todos</button>
+                        <button type="button" class="tab-confi" data-categoria="combos"><i class="fa-solid fa-box-open"></i> Combos</button>
+                        <button type="button" class="tab-confi" data-categoria="popcorn"><i class="fa-solid fa-bowl-food"></i> Pop Corn</button>
+                        <button type="button" class="tab-confi" data-categoria="bebidas"><i class="fa-solid fa-cup-straw"></i> Bebidas</button>
+                        <button type="button" class="tab-confi" data-categoria="snacks"><i class="fa-solid fa-cookie-bite"></i> Snacks</button>
+                    </div>
+
+                    <!-- Grid de productos -->
+                    <div class="grid-confiteria" id="contenedor-confiteria"></div>
+                </div>
             </div>
 
             <!-- COLUMNA DERECHA: Datos del Cliente y Liquidación Monetaria -->
@@ -137,6 +217,18 @@
                             <span style="color: var(--text-muted);">Precio Base Unitario:</span>
                             <span id="lbl-resumen-precio" style="font-weight: bold;">S/ 0.00</span>
                         </div>
+
+                        <!-- Sub-resumen de Confitería -->
+                        <div style="border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span style="color: var(--text-muted);">Confitería y Combos:</span>
+                                <span id="lbl-resumen-confi-total" style="font-weight: bold;">S/ 0.00</span>
+                            </div>
+                            <div id="lbl-resumen-confi-items" class="resumen-confi-lista">
+                                <span>Sin productos de confitería</span>
+                            </div>
+                        </div>
+
                         <div style="display: flex; justify-content: space-between; color: #fca5a5;">
                             <span>Descuento Aplicado:</span>
                             <span id="lbl-resumen-desc">- S/ 0.00</span>
@@ -161,5 +253,161 @@
     </div>
 
     <script src="js/venta-presencial.js"></script>
+    <script>
+        // Catálogo inicial de Confitería
+        const CATALOGO_CONFITERIA = [
+            { id: 'CMB-01', cat: 'combos', nombre: 'Combo Dúo Clásico', desc: '1 Pop Corn Grande + 2 Gaseosas 22oz', precio: 28.00 },
+            { id: 'CMB-02', cat: 'combos', nombre: 'Combo Familiar', desc: '1 Pop Corn Gigante + 4 Bebidas + 1 Nachos', precio: 46.00 },
+            { id: 'POP-01', cat: 'popcorn', nombre: 'Pop Corn Mantequilla Mediano', desc: 'Recién hecho con mantequilla', precio: 12.00 },
+            { id: 'POP-02', cat: 'popcorn', nombre: 'Pop Corn Caramelo Grande', desc: 'Dulce y crujiente', precio: 16.50 },
+            { id: 'BEB-01', cat: 'bebidas', nombre: 'Gaseosa Personal 22oz', desc: 'Cola, Lima Limón o Chicha', precio: 8.50 },
+            { id: 'BEB-02', cat: 'bebidas', nombre: 'Agua Mineral Sin Gas', desc: 'Botella 600ml helada', precio: 5.00 },
+            { id: 'SNK-01', cat: 'snacks', nombre: 'Nachos con Queso Cheddar', desc: 'Porción personal con salsa caliente', precio: 13.00 },
+            { id: 'SNK-02', cat: 'snacks', nombre: 'Hot Dog Clásico', desc: 'Con papas al hilo y salsas', precio: 11.00 }
+        ];
+
+        const carritoConfiteria = {}; // { [id]: cantidad }
+        let categoriaActiva = 'todos';
+
+        function obtenerCantidadAsientosSeleccionados() {
+            const cantTexto = document.getElementById('lbl-resumen-cant')?.textContent || '0';
+            const cantNum = parseInt(cantTexto, 10);
+            if (!Number.isNaN(cantNum) && cantNum > 0) return cantNum;
+            return document.querySelectorAll('.butaca.seleccionada').length;
+        }
+
+        function actualizarEstadoConfiteria() {
+            const hayAsientos = obtenerCantidadAsientosSeleccionados() > 0;
+            const aviso = document.getElementById('aviso-seleccionar-asientos');
+            if (aviso) {
+                aviso.style.display = hayAsientos ? 'none' : 'block';
+            }
+
+            document.querySelectorAll('.btn-qty').forEach(btn => {
+                btn.disabled = !hayAsientos;
+            });
+
+            renderizarResumenConfiteria();
+        }
+
+        function calcularTotalConfiteria() {
+            return CATALOGO_CONFITERIA.reduce((acc, item) => {
+                const cant = carritoConfiteria[item.id] || 0;
+                return acc + (cant * item.precio);
+            }, 0);
+        }
+
+        function renderizarResumenConfiteria() {
+            const totalConfi = calcularTotalConfiteria();
+            const lblTotalConfi = document.getElementById('lbl-resumen-confi-total');
+            const lblItemsConfi = document.getElementById('lbl-resumen-confi-items');
+
+            if (lblTotalConfi) {
+                lblTotalConfi.textContent = `S/ ${totalConfi.toFixed(2)}`;
+            }
+
+            const seleccionados = CATALOGO_CONFITERIA.filter(item => (carritoConfiteria[item.id] || 0) > 0);
+            if (lblItemsConfi) {
+                if (seleccionados.length === 0) {
+                    lblItemsConfi.innerHTML = '<span>Sin productos de confitería</span>';
+                } else {
+                    lblItemsConfi.innerHTML = seleccionados.map(item => {
+                        const cant = carritoConfiteria[item.id];
+                        return `<div>• ${cant}x ${item.nombre} (S/ ${(cant * item.precio).toFixed(2)})</div>`;
+                    }).join('');
+                }
+            }
+
+            // Sumar al total neto visible si el total actual es numérico
+            const lblTotalNeto = document.getElementById('lbl-resumen-total');
+            const lblPrecioBase = document.getElementById('lbl-resumen-precio');
+            const lblDesc = document.getElementById('lbl-resumen-desc');
+            const cantBoletos = obtenerCantidadAsientosSeleccionados();
+
+            if (lblTotalNeto && lblPrecioBase) {
+                const precioUnit = parseFloat((lblPrecioBase.textContent || '0').replace(/[^0-9.]/g, '')) || 0;
+                const descVal = parseFloat((lblDesc?.textContent || '0').replace(/[^0-9.]/g, '')) || 0;
+                const subtotalBoletos = cantBoletos * precioUnit;
+                const totalFinal = Math.max(0, subtotalBoletos + totalConfi - descVal);
+                lblTotalNeto.textContent = `S/ ${totalFinal.toFixed(2)}`;
+            }
+        }
+
+        function cambiarCantidadProducto(id, delta) {
+            if (obtenerCantidadAsientosSeleccionados() === 0) return;
+            const actual = carritoConfiteria[id] || 0;
+            const nuevo = Math.max(0, actual + delta);
+            if (nuevo === 0) {
+                delete carritoConfiteria[id];
+            } else {
+                carritoConfiteria[id] = nuevo;
+            }
+            renderizarProductosConfiteria();
+            renderizarResumenConfiteria();
+        }
+
+        function renderizarProductosConfiteria() {
+            const contenedor = document.getElementById('contenedor-confiteria');
+            if (!contenedor) return;
+
+            const filtrados = categoriaActiva === 'todos'
+                ? CATALOGO_CONFITERIA
+                : CATALOGO_CONFITERIA.filter(item => item.cat === categoriaActiva);
+
+            const hayAsientos = obtenerCantidadAsientosSeleccionados() > 0;
+
+            contenedor.innerHTML = filtrados.map(item => {
+                const cant = carritoConfiteria[item.id] || 0;
+                return `
+                    <div class="item-confiteria">
+                        <div class="item-confi-header">
+                            <div>
+                                <div class="item-confi-titulo">${item.nombre}</div>
+                                <div class="item-confi-desc">${item.desc}</div>
+                            </div>
+                            <span class="item-confi-precio">S/ ${item.precio.toFixed(2)}</span>
+                        </div>
+                        <div class="qty-controls">
+                            <button type="button" class="btn-qty" onclick="cambiarCantidadProducto('${item.id}', -1)" ${!hayAsientos || cant === 0 ? 'disabled' : ''}>-</button>
+                            <span class="qty-valor">${cant}</span>
+                            <button type="button" class="btn-qty" onclick="cambiarCantidadProducto('${item.id}', 1)" ${!hayAsientos ? 'disabled' : ''}>+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderizarProductosConfiteria();
+            actualizarEstadoConfiteria();
+
+            document.querySelectorAll('.tab-confi').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-confi').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    categoriaActiva = tab.dataset.categoria;
+                    renderizarProductosConfiteria();
+                });
+            });
+
+            // Observa cambios en el resumen de asientos/boletos hecho por js/venta-presencial.js
+            const targetResumen = document.getElementById('lbl-resumen-cant');
+            if (targetResumen) {
+                const observer = new MutationObserver(() => {
+                    actualizarEstadoConfiteria();
+                    renderizarProductosConfiteria();
+                });
+                observer.observe(targetResumen, { childList: true, characterData: true, subtree: true });
+            }
+
+            // Respaldo por clic en butacas
+            document.getElementById('contenedor-butacas')?.addEventListener('click', () => {
+                setTimeout(() => {
+                    actualizarEstadoConfiteria();
+                    renderizarProductosConfiteria();
+                }, 50);
+            });
+        });
+    </script>
 </body>
 </html>

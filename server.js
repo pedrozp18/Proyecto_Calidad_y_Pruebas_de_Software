@@ -688,31 +688,63 @@ app.get('/api/ventas/asientos-ocupados/:idFuncion', (req, res) => {
     });
 });
 
+// Obtener productos activos de confitería desde la tabla `producto`
+app.get('/api/confiteria/productos', (req, res) => {
+    const query = `
+        SELECT idProducto, nombreProducto, categoria, precioVenta, estado
+        FROM producto
+        WHERE estado IS NULL OR estado IN ('Activo', 'Disponible', 'activo', 'disponible')
+        ORDER BY categoria, nombreProducto
+    `;
+    db.query(query, (err, rows) => {
+        if (err) {
+            console.error("❌ Error consultando productos de confitería:", err);
+            return res.status(500).json({ error: "Error al cargar productos de confitería." });
+        }
+        res.json(rows);
+    });
+});
+
 // C. RUTA CORREGIDA Y ADAPTADA A TU BASE DE DATOS
 app.post('/api/ventas/procesar', (req, res) => {
-    const { idSesionCaja, idFuncion, dniCliente, subtotal, descuento, totalNeto, asientos } = req.body;
+    const {
+        idSesionCaja,
+        idFuncion,
+        dniCliente,
+        subtotal,
+        descuento,
+        totalNeto,
+        asientos = [],
+        confiteria = [],
+        totalConfiteria = 0
+    } = req.body;
 
     if (!dniCliente || dniCliente.trim() === "") {
         return res.status(400).json({ error: "El DNI del cliente es obligatorio." });
     }
 
-    if (!idFuncion || !asientos || asientos.length === 0) {
+    if (!idFuncion || !Array.isArray(asientos) || asientos.length === 0) {
         return res.status(400).json({ error: 'Faltan datos obligatorios para la transacción.' });
     }
 
-    const montoBrutoVal = subtotal || 18.00;
-    const montoDescuentoVal = descuento || 0.00;
-    const montoNetoVal = totalNeto || (montoBrutoVal - montoDescuentoVal);
-    const funcionId = idFuncion || 1;
+    const itemsConfi = Array.isArray(confiteria) ? confiteria : [];
+    const montoConfiCalculado = itemsConfi.reduce(
+        (acc, p) => acc + (Number(p.precioUnitario || 0) * Number(p.cantidad || 0)),
+        0
+    );
+    const montoConfiVal = Number(totalConfiteria || montoConfiCalculado || 0);
+    const montoBrutoVal = Number(subtotal || (18.00 * asientos.length + montoConfiVal));
+    const montoDescuentoVal = Number(descuento || 0.00);
+    const montoNetoVal = Number(totalNeto ?? (montoBrutoVal - montoDescuentoVal));
+    const funcionId = Number(idFuncion || 1);
 
     db.beginTransaction((errTx) => {
         if (errTx) return res.status(500).json({ error: errTx.message });
 
-        // Desactivar temporalmente restricciones de llaves foráneas para evitar errores por IDs de prueba
         db.query("SET FOREIGN_KEY_CHECKS = 0", (errFk) => {
             if (errFk) return db.rollback(() => res.status(500).json({ error: errFk.message }));
 
-            // 1. Buscar cliente por DNI usando la columna correcta 'id_cliente'
+            // 1. Buscar cliente por DNI
             db.query("SELECT id_cliente FROM cliente WHERE dni = ?", [dniCliente], (errCli, rows) => {
                 if (errCli) {
                     console.error("❌ Error buscando cliente:", errCli);
@@ -721,57 +753,157 @@ app.post('/api/ventas/procesar', (req, res) => {
 
                 const idClienteReal = rows.length > 0 ? rows[0].id_cliente : null;
 
-                const ejecutarVentaFinal = (idC) => {
-                    const queryVenta = `INSERT INTO Venta (idCliente, fechaHora, cantidadBoletos, montoBruto, montoDescuento, montoTotalNeto, tipoVenta, estado) 
-                                        VALUES (?, NOW(), ?, ?, ?, ?, 'Taquilla', 'Completada')`;
-                    
-                    db.query(queryVenta, [idC, asientos.length, montoBrutoVal, montoDescuentoVal, montoNetoVal], (errVenta, resVenta) => {
-                        if (errVenta) {
-                            console.error("❌ Error insertando en Venta:", errVenta);
-                            return db.rollback(() => res.status(500).json({ error: errVenta.message }));
-                        }
+                const descontarInsumosPorReceta = (callbackListo) => {
+                    if (itemsConfi.length === 0) return callbackListo();
 
-                        const idVenta = resVenta.insertId;
+                    // Recorrer cada producto de confitería vendido para descontar sus insumos según receta_producto_insumo
+                    let idx = 0;
 
-                        const queryDetalle = `INSERT INTO detalle_venta (idVenta, idFuncion, item_comprado, montoPagado) VALUES ?`;
-                        const valoresDetalle = asientos.map(butaca => [
-                            idVenta, 
-                            funcionId, 
-                            `Entrada - Butaca ${butaca}`, 
-                            (montoNetoVal / asientos.length)
-                        ]);
+                    const procesarSiguienteProducto = () => {
+                        if (idx >= itemsConfi.length) return callbackListo();
 
-                        db.query(queryDetalle, [valoresDetalle], (errDet) => {
-                            if (errDet) {
-                                console.error("❌ Error insertando en detalle_venta:", errDet);
-                                return db.rollback(() => res.status(500).json({ error: errDet.message }));
+                        const prod = itemsConfi[idx++];
+                        const idProd = Number(prod.idProducto);
+                        const cantVendida = Number(prod.cantidad || 1);
+
+                        if (!idProd || cantVendida <= 0) return procesarSiguienteProducto();
+
+                        const queryReceta = `
+                            SELECT idInsumo, cantidad_a_descontar
+                            FROM receta_producto_insumo
+                            WHERE idProducto = ?
+                        `;
+
+                        db.query(queryReceta, [idProd], (errRec, recetas) => {
+                            if (errRec) {
+                                console.error("❌ Error consultando receta_producto_insumo:", errRec);
+                                return db.rollback(() => res.status(500).json({ error: errRec.message }));
                             }
 
-                            // Reactivar validaciones de llaves foráneas antes del commit
-                            db.query("SET FOREIGN_KEY_CHECKS = 1", () => {
-                                db.commit((errCommit) => {
-                                    if (errCommit) {
-                                        console.error("❌ Error en commit:", errCommit);
-                                        return db.rollback(() => res.status(500).json({ error: errCommit.message }));
+                            if (!recetas || recetas.length === 0) {
+                                return procesarSiguienteProducto();
+                            }
+
+                            let rIdx = 0;
+                            const aplicarSiguienteInsumo = () => {
+                                if (rIdx >= recetas.length) return procesarSiguienteProducto();
+
+                                const rec = recetas[rIdx++];
+                                const totalDescontar = Number(rec.cantidad_a_descontar || 0) * cantVendida;
+
+                                const queryStock = `
+                                    UPDATE insumo
+                                    SET stockActual = GREATEST(0, stockActual - ?)
+                                    WHERE idInsumo = ?
+                                `;
+
+                                db.query(queryStock, [totalDescontar, rec.idInsumo], (errUpd) => {
+                                    if (errUpd) {
+                                        console.error("❌ Error actualizando stockActual en insumo:", errUpd);
+                                        return db.rollback(() => res.status(500).json({ error: errUpd.message }));
                                     }
-                                    res.status(201).json({ success: true, message: 'Venta procesada con éxito.', idVenta });
+                                    aplicarSiguienteInsumo();
                                 });
-                            });
+                            };
+
+                            aplicarSiguienteInsumo();
                         });
-                    });
+                    };
+
+                    procesarSiguienteProducto();
                 };
 
-                // Si el cliente no existe, lo insertamos usando únicamente columnas básicas garantizadas
+                const ejecutarVentaFinal = (idC) => {
+                    const queryVenta = `
+                        INSERT INTO venta (idCliente, fechaHora, cantidadBoletos, montoBruto, montoDescuento, montoTotalNeto, tipoVenta, estado)
+                        VALUES (?, NOW(), ?, ?, ?, ?, 'Taquilla', 'Completada')
+                    `;
+
+                    db.query(
+                        queryVenta,
+                        [idC, asientos.length, montoBrutoVal, montoDescuentoVal, montoNetoVal],
+                        (errVenta, resVenta) => {
+                            if (errVenta) {
+                                console.error("❌ Error insertando en venta:", errVenta);
+                                return db.rollback(() => res.status(500).json({ error: errVenta.message }));
+                            }
+
+                            const idVenta = resVenta.insertId;
+                            const subtotalBoletosNeto = Math.max(0, montoNetoVal - montoConfiVal);
+                            const montoPorButaca = asientos.length > 0 ? +(subtotalBoletosNeto / asientos.length).toFixed(2) : 0;
+
+                            // Filas de butacas en detalle_venta (idProducto = NULL)
+                            const filasDetalle = asientos.map((butaca) => [
+                                idVenta,
+                                funcionId,
+                                null,
+                                null,
+                                `Entrada - Butaca ${butaca}`,
+                                montoPorButaca,
+                                0.00
+                            ]);
+
+                            // Filas de productos de confitería en detalle_venta (idFuncion = NULL, idProducto = idProd)
+                            itemsConfi.forEach((prod) => {
+                                const cant = Number(prod.cantidad || 1);
+                                const precioUnit = Number(prod.precioUnitario || 0);
+                                const montoItem = +(cant * precioUnit).toFixed(2);
+                                filasDetalle.push([
+                                    idVenta,
+                                    null,
+                                    null,
+                                    Number(prod.idProducto),
+                                    `${cant}x ${prod.nombre}`,
+                                    montoItem,
+                                    0.00
+                                ]);
+                            });
+
+                            const queryDetalle = `
+                                INSERT INTO detalle_venta
+                                (idVenta, idFuncion, idAsiento, idProducto, item_comprado, montoPagado, vuelto)
+                                VALUES ?
+                            `;
+
+                            db.query(queryDetalle, [filasDetalle], (errDet) => {
+                                if (errDet) {
+                                    console.error("❌ Error insertando en detalle_venta:", errDet);
+                                    return db.rollback(() => res.status(500).json({ error: errDet.message }));
+                                }
+
+                                descontarInsumosPorReceta(() => {
+                                    db.query("SET FOREIGN_KEY_CHECKS = 1", () => {
+                                        db.commit((errCommit) => {
+                                            if (errCommit) {
+                                                console.error("❌ Error en commit:", errCommit);
+                                                return db.rollback(() => res.status(500).json({ error: errCommit.message }));
+                                            }
+                                            res.status(201).json({
+                                                success: true,
+                                                message: 'Venta procesada con éxito.',
+                                                idVenta
+                                            });
+                                        });
+                                    });
+                                });
+                            });
+                        }
+                    );
+                };
+
+                // Crear cliente temporal si no existe por DNI
                 if (!idClienteReal) {
-                    const queryNuevoCli = `INSERT IGNORE INTO cliente (nombres, correo, password_hash, dni, fecha_registro) 
-                                           VALUES ('Cliente', ?, 'temp_hash', ?, NOW())`;
-                    
+                    const queryNuevoCli = `
+                        INSERT IGNORE INTO cliente (nombres, correo, password_hash, dni, fecha_registro)
+                        VALUES ('Cliente', ?, 'temp_hash', ?, NOW())
+                    `;
+
                     db.query(queryNuevoCli, [`dni_${dniCliente}_${Date.now()}@cine.com`, dniCliente], (errNew, resNew) => {
                         if (errNew) {
                             console.error("❌ Error creando cliente nuevo:", errNew);
                             return db.rollback(() => res.status(500).json({ error: errNew.message }));
                         }
-                        
+
                         if (resNew.insertId > 0) {
                             ejecutarVentaFinal(resNew.insertId);
                         } else {

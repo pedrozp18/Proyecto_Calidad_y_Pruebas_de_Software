@@ -5,6 +5,187 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CINE_D&A - Cartelera & Entradas</title>
     <link rel="stylesheet" href="css/catalago-cliente.css">
+    <style>
+        /* Estilos del módulo de pasos dentro de #modalCompra */
+        #modalCompra .modal-content {
+            max-width: 640px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .pasos-compra-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 1rem 0;
+        }
+        .tab-paso-compra {
+            background: #0f172a;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 8px 6px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-paso-compra.active {
+            background: #1d4ed8;
+            color: #ffffff;
+            border-color: #38bdf8;
+        }
+        .paso-panel {
+            display: none;
+        }
+        .paso-panel.active {
+            display: block;
+        }
+        .pantalla-sala-cliente {
+            background: #475569;
+            color: #0f172a;
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 5px;
+            border-radius: 0 0 12px 12px;
+            margin: 0 auto 14px auto;
+            max-width: 380px;
+            letter-spacing: 1px;
+        }
+        .grid-butacas-cliente {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 7px;
+            max-width: 380px;
+            margin: 0 auto 12px auto;
+        }
+        .butaca-cliente {
+            background: #64748b;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 7px 0;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s, background 0.15s;
+        }
+        .butaca-cliente:hover:not(:disabled) {
+            background: #475569;
+        }
+        .butaca-cliente.seleccionada {
+            background: #ef4444;
+            transform: scale(1.05);
+        }
+        .butaca-cliente.ocupada {
+            background: #1e293b;
+            color: #475569;
+            cursor: not-allowed;
+        }
+        .leyenda-butacas-cliente {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        .leyenda-butacas-cliente span {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .dot-butaca {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        .filtros-confi-cliente {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .btn-cat-confi {
+            background: #0f172a;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            cursor: pointer;
+        }
+        .btn-cat-confi.active {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+        }
+        .grid-confi-cliente {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+            max-height: 230px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .card-confi-cliente {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-confi-info strong {
+            display: block;
+            font-size: 0.88rem;
+            color: #f8fafc;
+        }
+        .card-confi-info small {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+        .card-confi-precio {
+            color: #10b981;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+        .controles-cant-confi {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .btn-cant-confi {
+            width: 26px;
+            height: 26px;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .resumen-pago-cliente {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 0.88rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .resumen-pago-cliente div {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+    </style>
 </head>
 <body>
 
@@ -24,26 +205,390 @@
         </div>
     </div>
 
-    <!-- Modal para comprar entradas -->
+    <!-- Modal para comprar entradas (3 pasos: Asientos -> Confitería -> Pago) -->
     <div class="modal" id="modalCompra">
         <div class="modal-content">
             <h3 id="modalTituloPelicula">Comprar Entradas</h3>
-            <p id="modalDetalleFuncion" style="margin: 0.8rem 0; color: #94a3b8;"></p>
-            
-            <label style="display:block; margin-bottom:0.4rem; font-size:0.9rem;">Cantidad de Entradas:</label>
-            <input type="number" id="numEntradas" min="1" max="10" value="1" style="width: 100%; padding: 0.6rem; border-radius: 6px; background: #0f172a; color: white; border: 1px solid #334155;">
-            
+            <p id="modalDetalleFuncion" style="margin: 0.5rem 0; color: #94a3b8;"></p>
+
+            <!-- Navegación por pasos -->
+            <div class="pasos-compra-tabs">
+                <button type="button" class="tab-paso-compra active" data-paso="asientos">1. Asientos</button>
+                <button type="button" class="tab-paso-compra" data-paso="confiteria">2. Confitería</button>
+                <button type="button" class="tab-paso-compra" data-paso="pago">3. Pago</button>
+            </div>
+
+            <!-- PASO 1: Selección de Asientos -->
+            <div class="paso-panel active" id="paso-asientos">
+                <div class="pantalla-sala-cliente">PANTALLA</div>
+                <div class="grid-butacas-cliente" id="gridButacasCliente"></div>
+                <div class="leyenda-butacas-cliente">
+                    <span><i class="dot-butaca" style="background:#64748b;"></i> Disponible</span>
+                    <span><i class="dot-butaca" style="background:#1e293b;"></i> Ocupado</span>
+                    <span><i class="dot-butaca" style="background:#ef4444;"></i> Seleccionado</span>
+                </div>
+                <div style="font-size:0.85rem; color:#cbd5e1; margin-top:8px;">
+                    Asientos elegidos: <strong id="lblAsientosSeleccionados" style="color:#ef4444;">Ninguno</strong>
+                </div>
+                <!-- Campo sincronizado automáticamente con los asientos elegidos -->
+                <input type="hidden" id="numEntradas" value="0">
+            </div>
+
+            <!-- PASO 2: Combos, Pop Corn, Bebidas y Snacks -->
+            <div class="paso-panel" id="paso-confiteria">
+                <div class="filtros-confi-cliente">
+                    <button type="button" class="btn-cat-confi active" data-cat="todos">Todos</button>
+                    <button type="button" class="btn-cat-confi" data-cat="Combo">Combos</button>
+                    <button type="button" class="btn-cat-confi" data-cat="Snack">Pop Corn y Snacks</button>
+                    <button type="button" class="btn-cat-confi" data-cat="Bebida">Bebidas</button>
+                </div>
+                <div class="grid-confi-cliente" id="gridConfiteriaCliente"></div>
+            </div>
+
+            <!-- PASO 3: Resumen y Método de Pago -->
+            <div class="paso-panel" id="paso-pago">
+                <div class="resumen-pago-cliente">
+                    <div>
+                        <span style="color:#94a3b8;">Asientos (<span id="resumenCantEntradas">0</span>):</span>
+                        <strong id="resumenAsientosTexto">-</strong>
+                    </div>
+                    <div>
+                        <span style="color:#94a3b8;">Subtotal Entradas:</span>
+                        <strong id="resumenSubtotalEntradas">S/ 0.00</strong>
+                    </div>
+                    <div>
+                        <span style="color:#94a3b8;">Confitería:</span>
+                        <strong id="resumenConfiTexto">Sin productos</strong>
+                    </div>
+                    <div>
+                        <span style="color:#94a3b8;">Subtotal Confitería:</span>
+                        <strong id="resumenSubtotalConfi">S/ 0.00</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 0.9rem;">
+                    <label style="display:block; margin-bottom:0.35rem; font-size:0.88rem;">Método de Pago:</label>
+                    <select id="selectMetodoPagoCliente" style="width: 100%; padding: 0.6rem; border-radius: 6px; background: #0f172a; color: white; border: 1px solid #334155;">
+                        <option value="Tarjeta">Tarjeta de Crédito / Débito</option>
+                        <option value="Yape/Plin">Yape / Plin</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Total siempre visible -->
             <div style="margin-top: 1rem; font-weight: bold; font-size: 1.1rem; color: #38bdf8;">
                 Total a Pagar: S/ <span id="lblMontoTotal">0.00</span>
             </div>
 
+            <!-- Botones de navegación y confirmación -->
             <div class="modal-actions">
-                <button class="btn-cancel" id="btnCerrarModal">Cancelar</button>
-                <button class="btn-confirm" id="btnConfirmarCompra">Confirmar Compra</button>
+                <button type="button" class="btn-cancel" id="btnCerrarModal">Cancelar</button>
+                <button type="button" class="btn-cancel" id="btnPasoAnterior" style="display:none;">← Anterior</button>
+                <button type="button" class="btn-confirm" id="btnPasoSiguiente">Siguiente: Confitería →</button>
+                <button type="button" class="btn-confirm" id="btnConfirmarCompra" style="display:none;">Confirmar Compra</button>
             </div>
         </div>
     </div>
 
     <script src="js/catalogo-cliente.js"></script>
+    <script>
+        // Controlador autocontenido para Asientos + Confitería + Pago sobre #modalCompra
+        (() => {
+            const API_BASE = 'http://localhost:3000';
+            const PRODUCTOS_RESPALDO = [
+                { idProducto: 1, nombreProducto: 'Combo Dúo Clásico', categoria: 'Combo', precioVenta: 28.00 },
+                { idProducto: 2, nombreProducto: 'Combo Familiar', categoria: 'Combo', precioVenta: 46.00 },
+                { idProducto: 3, nombreProducto: 'Pop Corn Mantequilla Grande', categoria: 'Snack', precioVenta: 15.00 },
+                { idProducto: 4, nombreProducto: 'Nachos con Queso', categoria: 'Snack', precioVenta: 13.00 },
+                { idProducto: 5, nombreProducto: 'Gaseosa 22oz', categoria: 'Bebida', precioVenta: 8.50 },
+                { idProducto: 6, nombreProducto: 'Agua Mineral 600ml', categoria: 'Bebida', precioVenta: 5.00 }
+            ];
+
+            let asientosElegidos = [];
+            let asientosOcupados = [];
+            let productosConfi = [...PRODUCTOS_RESPALDO];
+            let carritoConfi = {};
+            let categoriaConfi = 'todos';
+            let pasoActual = 'asientos';
+
+            function obtenerPrecioUnitarioFuncion() {
+                const detalle = document.getElementById('modalDetalleFuncion')?.textContent || '';
+                const match = detalle.match(/S\/\s*([0-9]+(?:\.[0-9]+)?)/);
+                return match ? parseFloat(match[1]) : 18.00;
+            }
+
+            function obtenerIdFuncionActual() {
+                const modal = document.getElementById('modalCompra');
+                const attr = modal?.dataset?.idFuncion;
+                if (attr && !isNaN(parseInt(attr, 10))) return parseInt(attr, 10);
+                // Busca el select activo de la tarjeta si existe
+                const selects = Array.from(document.querySelectorAll('#contenedorPeliculas select'));
+                const activo = selects.find(s => s.value);
+                return activo && !isNaN(parseInt(activo.value, 10)) ? parseInt(activo.value, 10) : 1;
+            }
+
+            function calcularTotalesModal() {
+                const precioEntrada = obtenerPrecioUnitarioFuncion();
+                const cantEntradas = asientosElegidos.length;
+                const subEntradas = cantEntradas * precioEntrada;
+                const subConfi = productosConfi.reduce((acc, p) => {
+                    return acc + ((carritoConfi[p.idProducto] || 0) * Number(p.precioVenta || 0));
+                }, 0);
+                return {
+                    cantEntradas,
+                    subEntradas,
+                    subConfi,
+                    total: subEntradas + subConfi
+                };
+            }
+
+            function actualizarTotalesYResumen() {
+                const { cantEntradas, subEntradas, subConfi, total } = calcularTotalesModal();
+
+                const inputEntradas = document.getElementById('numEntradas');
+                if (inputEntradas) inputEntradas.value = cantEntradas;
+
+                const lblAsientos = document.getElementById('lblAsientosSeleccionados');
+                if (lblAsientos) {
+                    lblAsientos.textContent = cantEntradas > 0 ? asientosElegidos.join(', ') : 'Ninguno';
+                }
+
+                const lblTotal = document.getElementById('lblMontoTotal');
+                if (lblTotal) lblTotal.textContent = total.toFixed(2);
+
+                const elCant = document.getElementById('resumenCantEntradas');
+                if (elCant) elCant.textContent = cantEntradas;
+
+                const elAsientosTxt = document.getElementById('resumenAsientosTexto');
+                if (elAsientosTxt) elAsientosTxt.textContent = cantEntradas > 0 ? asientosElegidos.join(', ') : '-';
+
+                const elSubEnt = document.getElementById('resumenSubtotalEntradas');
+                if (elSubEnt) elSubEnt.textContent = `S/ ${subEntradas.toFixed(2)}`;
+
+                const seleccionadosConfi = productosConfi
+                    .filter(p => (carritoConfi[p.idProducto] || 0) > 0)
+                    .map(p => `${carritoConfi[p.idProducto]}x ${p.nombreProducto}`);
+
+                const elConfiTxt = document.getElementById('resumenConfiTexto');
+                if (elConfiTxt) {
+                    elConfiTxt.textContent = seleccionadosConfi.length > 0 ? seleccionadosConfi.join(', ') : 'Sin productos';
+                }
+
+                const elSubConfi = document.getElementById('resumenSubtotalConfi');
+                if (elSubConfi) elSubConfi.textContent = `S/ ${subConfi.toFixed(2)}`;
+
+                // Exponer estado para que js/catalogo-cliente.js lo lea al confirmar compra
+                window.estadoCompraCliente = {
+                    asientos: [...asientosElegidos],
+                    confiteria: productosConfi
+                        .filter(p => (carritoConfi[p.idProducto] || 0) > 0)
+                        .map(p => ({
+                            idProducto: p.idProducto,
+                            nombre: p.nombreProducto,
+                            cantidad: carritoConfi[p.idProducto],
+                            precioUnitario: Number(p.precioVenta || 0)
+                        })),
+                    subtotalEntradas: subEntradas,
+                    subtotalConfiteria: subConfi,
+                    totalNeto: total,
+                    metodoPago: document.getElementById('selectMetodoPagoCliente')?.value || 'Tarjeta'
+                };
+            }
+
+            function renderizarButacas() {
+                const grid = document.getElementById('gridButacasCliente');
+                if (!grid) return;
+
+                const filas = ['A', 'B', 'C', 'D', 'E'];
+                const botones = [];
+                filas.forEach(fila => {
+                    for (let col = 1; col <= 8; col++) {
+                        const cod = `${fila}${col}`;
+                        const ocupada = asientosOcupados.includes(cod);
+                        const seleccionada = asientosElegidos.includes(cod);
+                        botones.push(`
+                            <button type="button"
+                                class="butaca-cliente ${ocupada ? 'ocupada' : ''} ${seleccionada ? 'seleccionada' : ''}"
+                                data-cod="${cod}"
+                                ${ocupada ? 'disabled' : ''}>
+                                ${cod}
+                            </button>
+                        `);
+                    }
+                });
+
+                grid.innerHTML = botones.join('');
+                grid.querySelectorAll('.butaca-cliente:not(.ocupada)').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const cod = btn.dataset.cod;
+                        if (asientosElegidos.includes(cod)) {
+                            asientosElegidos = asientosElegidos.filter(a => a !== cod);
+                        } else {
+                            asientosElegidos.push(cod);
+                        }
+                        renderizarButacas();
+                        actualizarTotalesYResumen();
+                    });
+                });
+            }
+
+            function renderizarConfiteria() {
+                const grid = document.getElementById('gridConfiteriaCliente');
+                if (!grid) return;
+
+                const filtrados = categoriaConfi === 'todos'
+                    ? productosConfi
+                    : productosConfi.filter(p => (p.categoria || '').toLowerCase() === categoriaConfi.toLowerCase());
+
+                grid.innerHTML = filtrados.map(prod => {
+                    const cant = carritoConfi[prod.idProducto] || 0;
+                    return `
+                        <div class="card-confi-cliente">
+                            <div class="card-confi-info">
+                                <strong>${prod.nombreProducto}</strong>
+                                <small>${prod.categoria || 'Confitería'}</small>
+                                <div class="card-confi-precio">S/ ${Number(prod.precioVenta || 0).toFixed(2)}</div>
+                            </div>
+                            <div class="controles-cant-confi">
+                                <button type="button" class="btn-cant-confi btn-menos-confi" data-id="${prod.idProducto}">-</button>
+                                <span>${cant}</span>
+                                <button type="button" class="btn-cant-confi btn-mas-confi" data-id="${prod.idProducto}">+</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                grid.querySelectorAll('.btn-menos-confi').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        const actual = carritoConfi[id] || 0;
+                        if (actual <= 1) delete carritoConfi[id];
+                        else carritoConfi[id] = actual - 1;
+                        renderizarConfiteria();
+                        actualizarTotalesYResumen();
+                    });
+                });
+
+                grid.querySelectorAll('.btn-mas-confi').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const id = btn.dataset.id;
+                        carritoConfi[id] = (carritoConfi[id] || 0) + 1;
+                        renderizarConfiteria();
+                        actualizarTotalesYResumen();
+                    });
+                });
+            }
+
+            function cambiarPaso(nuevoPaso) {
+                if (nuevoPaso !== 'asientos' && asientosElegidos.length === 0) {
+                    alert('Por favor, selecciona al menos un asiento primero.');
+                    return;
+                }
+
+                pasoActual = nuevoPaso;
+
+                document.querySelectorAll('.tab-paso-compra').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.paso === pasoActual);
+                });
+                document.querySelectorAll('.paso-panel').forEach(panel => {
+                    panel.classList.toggle('active', panel.id === `paso-${pasoActual}`);
+                });
+
+                const btnAnterior = document.getElementById('btnPasoAnterior');
+                const btnSiguiente = document.getElementById('btnPasoSiguiente');
+                const btnConfirmar = document.getElementById('btnConfirmarCompra');
+
+                if (pasoActual === 'asientos') {
+                    btnAnterior.style.display = 'none';
+                    btnSiguiente.style.display = 'inline-block';
+                    btnSiguiente.textContent = 'Siguiente: Confitería →';
+                    btnConfirmar.style.display = 'none';
+                } else if (pasoActual === 'confiteria') {
+                    btnAnterior.style.display = 'inline-block';
+                    btnSiguiente.style.display = 'inline-block';
+                    btnSiguiente.textContent = 'Siguiente: Pago →';
+                    btnConfirmar.style.display = 'none';
+                } else {
+                    btnAnterior.style.display = 'inline-block';
+                    btnSiguiente.style.display = 'none';
+                    btnConfirmar.style.display = 'inline-block';
+                }
+
+                actualizarTotalesYResumen();
+            }
+
+            async function inicializarDatosModal() {
+                asientosElegidos = [];
+                carritoConfi = {};
+                pasoActual = 'asientos';
+
+                const idFuncion = obtenerIdFuncionActual();
+                try {
+                    const resOcup = await fetch(`${API_BASE}/api/ventas/asientos-ocupados/${idFuncion}`);
+                    if (resOcup.ok) {
+                        const dataOcup = await resOcup.json();
+                        asientosOcupados = Array.isArray(dataOcup) ? dataOcup : [];
+                    }
+                } catch (_) {
+                    asientosOcupados = [];
+                }
+
+                try {
+                    const resConfi = await fetch(`${API_BASE}/api/confiteria/productos`);
+                    if (resConfi.ok) {
+                        const dataConfi = await resConfi.json();
+                        if (Array.isArray(dataConfi) && dataConfi.length > 0) {
+                            productosConfi = dataConfi;
+                        }
+                    }
+                } catch (_) {
+                    // Mantiene respaldo local
+                }
+
+                renderizarButacas();
+                renderizarConfiteria();
+                cambiarPaso('asientos');
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.tab-paso-compra').forEach(tab => {
+                    tab.addEventListener('click', () => cambiarPaso(tab.dataset.paso));
+                });
+
+                document.querySelectorAll('.btn-cat-confi').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.btn-cat-confi').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        categoriaConfi = btn.dataset.cat;
+                        renderizarConfiteria();
+                    });
+                });
+
+                document.getElementById('btnPasoSiguiente')?.addEventListener('click', () => {
+                    if (pasoActual === 'asientos') cambiarPaso('confiteria');
+                    else if (pasoActual === 'confiteria') cambiarPaso('pago');
+                });
+
+                document.getElementById('btnPasoAnterior')?.addEventListener('click', () => {
+                    if (pasoActual === 'pago') cambiarPaso('confiteria');
+                    else if (pasoActual === 'confiteria') cambiarPaso('asientos');
+                });
+
+                document.getElementById('selectMetodoPagoCliente')?.addEventListener('change', actualizarTotalesYResumen);
+
+                // Detectar cada vez que js/catalogo-cliente.js abre #modalCompra
+                const modal = document.getElementById('modalCompra');
+                if (modal) {
+                    const observer = new MutationObserver(() => {
+                        const visible = modal.style.display === 'flex' || modal.style.display === 'block' || modal.classList.contains('active');
+                        if (visible) {
+                            inicializarDatosModal();
+                        }
+                    });
+                    observer.observe(modal, { attributes: true, attributeFilter: ['style', 'class'] });
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

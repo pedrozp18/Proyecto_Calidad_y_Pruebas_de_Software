@@ -1,6 +1,6 @@
 /**
  * js/venta-presencial.js
- * Lógica transaccional para el CU: Registrar Venta de Boletos Presencial
+ * Lógica transaccional para el CU: Registrar Venta de Boletos Presencial + Confitería
  * Sincronizado al 100% con tu HTML y server.js
  */
 
@@ -23,22 +23,154 @@ document.addEventListener("DOMContentLoaded", () => {
         elCajaActiva.innerHTML = '<i class="fa-solid fa-cash-register"></i> ' + cajaData.numeroCajaFisica + ' | Activa';
     }
 
+    // Catálogo de Confitería: Combos, Pop Corn, Bebidas y Snacks
+    // Mapea el ENUM de BD ('Combo', 'Bebida', 'Snack', 'Otro')[cite: 7] a las pestañas del HTML
+function mapearCategoriaBD(catBD) {
+    const c = (catBD || '').toLowerCase();
+    if (c.includes('combo')) return 'combos';
+    if (c.includes('pop')) return 'popcorn';
+    if (c.includes('bebida')) return 'bebidas';
+    if (c.includes('snack')) return 'snacks';
+    return 'snacks';
+}
+
+function cargarCatalogoConfiteriaDesdeBD() {
+    fetch('http://localhost:3000/api/confiteria/productos')
+        .then(res => res.ok ? res.json() : Promise.reject(new Error('No se pudo cargar confitería')))
+        .then(productosBD => {
+            if (Array.isArray(productosBD) && productosBD.length > 0) {
+                CATALOGO_CONFITERIA = productosBD.map(p => ({
+                    id: p.idProducto, // idProducto real de la tabla `producto`[cite: 7]
+                    cat: mapearCategoriaBD(p.categoria),
+                    nombre: p.nombreProducto,
+                    desc: `${p.categoria || 'Confitería'} • Disponible`,
+                    precio: parseFloat(p.precioVenta) || 0
+                }));
+            }
+            renderizarConfiteria();
+            actualizarLiquidacion();
+        })
+        .catch(() => {
+            renderizarConfiteria();
+            actualizarLiquidacion();
+        });
+}
+
+// Llama a cargarCatalogoConfiteriaDesdeBD() justo después de renderizarConfiteria() inicial
+
     // Variables de Estado Interno
     let precioUnitarioBase = 0;
     let asientosSeleccionados = [];
     let porcentajeDescuento = 0;
     let listaFuncionesCargadas = [];
+    let carritoConfiteria = {}; // { [idProducto]: cantidad }
+    let categoriaConfiteriaActiva = 'todos';
 
     // Componentes del DOM Sincronizados con venta-presencial.html
     const selectFuncion = document.getElementById("select-funcion");
     const contenedorButacas = document.getElementById("contenedor-butacas");
     const panelMapa = document.getElementById("panel-mapa-sala");
-    const btnBuscarFuncion = document.getElementById("btn-buscar-funcion"); 
+    const btnBuscarFuncion = document.getElementById("btn-buscar-funcion");
 
-    const txtDni = document.getElementById("txt-dni"); // ID Real de tu HTML
+    const contenedorConfiteria = document.getElementById("contenedor-confiteria");
+    const avisoSeleccionarAsientos = document.getElementById("aviso-seleccionar-asientos");
+
+    const txtDni = document.getElementById("txt-dni");
     const btnValidarAfiliacion = document.getElementById("btn-validar-afiliacion");
-    const txtDescuentoTipo = document.getElementById("txt-descuento-tipo"); // ID Real de tu HTML
+    const txtDescuentoTipo = document.getElementById("txt-descuento-tipo");
     const btnProcesarPago = document.getElementById("btn-procesar-pago");
+
+    // Helpers de Confitería
+    function obtenerTotalConfiteria() {
+        return CATALOGO_CONFITERIA.reduce((acc, item) => {
+            const cant = carritoConfiteria[item.id] || 0;
+            return acc + (cant * item.precio);
+        }, 0);
+    }
+
+    function obtenerItemsConfiteriaSeleccionados() {
+        return CATALOGO_CONFITERIA
+            .filter(item => (carritoConfiteria[item.id] || 0) > 0)
+            .map(item => {
+                const cantidad = carritoConfiteria[item.id];
+                return {
+                    idProducto: item.id,
+                    categoria: item.cat,
+                    nombre: item.nombre,
+                    cantidad: cantidad,
+                    precioUnitario: item.precio,
+                    subtotalProducto: +(cantidad * item.precio).toFixed(2)
+                };
+            });
+    }
+
+    function renderizarConfiteria() {
+        if (!contenedorConfiteria) return;
+
+        const hayAsientos = asientosSeleccionados.length > 0;
+        if (avisoSeleccionarAsientos) {
+            avisoSeleccionarAsientos.style.display = hayAsientos ? "none" : "block";
+        }
+
+        const itemsFiltrados = categoriaConfiteriaActiva === 'todos'
+            ? CATALOGO_CONFITERIA
+            : CATALOGO_CONFITERIA.filter(item => item.cat === categoriaConfiteriaActiva);
+
+        contenedorConfiteria.innerHTML = itemsFiltrados.map(item => {
+            const cant = carritoConfiteria[item.id] || 0;
+            return `
+                <div class="item-confiteria">
+                    <div class="item-confi-header">
+                        <div>
+                            <div class="item-confi-titulo">${item.nombre}</div>
+                            <div class="item-confi-desc">${item.desc}</div>
+                        </div>
+                        <span class="item-confi-precio">S/ ${item.precio.toFixed(2)}</span>
+                    </div>
+                    <div class="qty-controls">
+                        <button type="button" class="btn-qty btn-confi-menos" data-id="${item.id}" ${!hayAsientos || cant === 0 ? 'disabled' : ''}>-</button>
+                        <span class="qty-valor">${cant}</span>
+                        <button type="button" class="btn-qty btn-confi-mas" data-id="${item.id}" ${!hayAsientos ? 'disabled' : ''}>+</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        contenedorConfiteria.querySelectorAll(".btn-confi-menos").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (asientosSeleccionados.length === 0) return;
+                const id = btn.dataset.id;
+                const actual = carritoConfiteria[id] || 0;
+                if (actual <= 1) {
+                    delete carritoConfiteria[id];
+                } else {
+                    carritoConfiteria[id] = actual - 1;
+                }
+                renderizarConfiteria();
+                actualizarLiquidacion();
+            });
+        });
+
+        contenedorConfiteria.querySelectorAll(".btn-confi-mas").forEach(btn => {
+            btn.addEventListener("click", () => {
+                if (asientosSeleccionados.length === 0) return;
+                const id = btn.dataset.id;
+                carritoConfiteria[id] = (carritoConfiteria[id] || 0) + 1;
+                renderizarConfiteria();
+                actualizarLiquidacion();
+            });
+        });
+    }
+
+    // Eventos de pestañas de categorías de confitería
+    document.querySelectorAll(".tab-confi").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab-confi").forEach(t => t.classList.remove("active"));
+            tab.classList.add("active");
+            categoriaConfiteriaActiva = tab.dataset.categoria || 'todos';
+            renderizarConfiteria();
+        });
+    });
 
     // 2. Cargar Funciones Activas desde el Servidor
     fetch('http://localhost:3000/api/ventas/funciones-activas')
@@ -70,6 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Reiniciar selecciones previas
             asientosSeleccionados = [];
+            carritoConfiteria = {};
+            renderizarConfiteria();
             actualizarLiquidacion();
 
             // Consultar asientos ocupados desde MySQL
@@ -77,17 +211,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then(res => res.json())
                 .then(asientosOcupados => {
                     const ocupados = Array.isArray(asientosOcupados) ? asientosOcupados : [];
-                    
+
                     if (contenedorButacas) {
                         contenedorButacas.innerHTML = "";
-                        const asientosPorFila = 10; 
+                        const asientosPorFila = 10;
                         const totalFilasNecesarias = Math.ceil(capacidadSala / asientosPorFila);
                         contenedorButacas.style.gridTemplateColumns = `repeat(${asientosPorFila}, 1fr)`;
 
                         let asientoContador = 0;
 
                         for (let f = 0; f < totalFilasNecesarias; f++) {
-                            const letraFila = String.fromCharCode(65 + f); 
+                            const letraFila = String.fromCharCode(65 + f);
 
                             for (let c = 1; c <= asientosPorFila; c++) {
                                 if (asientoContador >= capacidadSala) break;
@@ -99,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                 boton.innerText = codigoButaca;
 
                                 if (ocupados.includes(codigoButaca)) {
-                                    // Cambiado a "ocupada" para que coincida con tus estilos CSS de venta-presencial.html
                                     boton.classList.add("ocupada");
                                     boton.disabled = true;
                                 } else {
@@ -111,6 +244,13 @@ document.addEventListener("DOMContentLoaded", () => {
                                             boton.classList.add("seleccionada");
                                             asientosSeleccionados.push(codigoButaca);
                                         }
+
+                                        // Si se deseleccionan todos los asientos, limpiar confitería y bloquear
+                                        if (asientosSeleccionados.length === 0) {
+                                            carritoConfiteria = {};
+                                        }
+
+                                        renderizarConfiteria();
                                         actualizarLiquidacion();
                                     });
                                 }
@@ -125,7 +265,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 4. Botón Validar Afiliación (Corregido para leer 'txtDni' real)
+    // 4. Botón Validar Afiliación
     if (btnValidarAfiliacion) {
         btnValidarAfiliacion.addEventListener("click", () => {
             const dniVal = txtDni ? txtDni.value.trim() : "";
@@ -156,12 +296,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 5. Calcular Precios en Tiempo Real
+    // 5. Calcular Precios en Tiempo Real (Boletos + Confitería)
     function actualizarLiquidacion() {
         const cantidad = asientosSeleccionados.length;
-        const subtotal = cantidad * precioUnitarioBase;
+        const subtotalBoletos = cantidad * precioUnitarioBase;
+        const totalConfiteria = obtenerTotalConfiteria();
+        const subtotal = subtotalBoletos + totalConfiteria;
         const descuento = subtotal * porcentajeDescuento;
-        const totalNeto = subtotal - descuento;
+        const totalNeto = Math.max(0, subtotal - descuento);
 
         const elCant = document.getElementById("lbl-resumen-cant");
         if (elCant) elCant.innerText = cantidad;
@@ -173,7 +315,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const elPrecio = document.getElementById("lbl-resumen-precio");
         if (elPrecio) elPrecio.innerText = "S/ " + precioUnitarioBase.toFixed(2);
-        
+
+        const elConfiTotal = document.getElementById("lbl-resumen-confi-total");
+        if (elConfiTotal) elConfiTotal.innerText = "S/ " + totalConfiteria.toFixed(2);
+
+        const elConfiItems = document.getElementById("lbl-resumen-confi-items");
+        if (elConfiItems) {
+            const seleccionados = obtenerItemsConfiteriaSeleccionados();
+            if (seleccionados.length === 0) {
+                elConfiItems.innerHTML = "<span>Sin productos de confitería</span>";
+            } else {
+                elConfiItems.innerHTML = seleccionados
+                    .map(p => `<div>• ${p.cantidad}x ${p.nombre} (S/ ${p.subtotalProducto.toFixed(2)})</div>`)
+                    .join("");
+            }
+        }
+
         const elDesc = document.getElementById("lbl-resumen-desc");
         if (elDesc) elDesc.innerText = "- S/ " + descuento.toFixed(2);
 
@@ -185,11 +342,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    // Renderizado inicial de confitería (bloqueada hasta seleccionar asientos)
+    renderizarConfiteria();
+    actualizarLiquidacion();
+
     // 6. Enviar la Venta a MySQL (form-venta)
     const formularioVenta = document.getElementById("form-venta");
     if (formularioVenta) {
         formularioVenta.addEventListener("submit", (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
 
             const idFuncion = parseInt(selectFuncion.value);
             if (!idFuncion || asientosSeleccionados.length === 0) {
@@ -198,11 +359,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const cantidad = asientosSeleccionados.length;
-            const subtotal = cantidad * precioUnitarioBase;
-            const descuento = subtotal * porcentajeDescuento;
-            const totalNeto = subtotal - descuento;
+            const subtotalBoletos = cantidad * precioUnitarioBase;
+            const confiteriaItems = obtenerItemsConfiteriaSeleccionados();
+            const totalConfiteria = obtenerTotalConfiteria();
+            const subtotal = +(subtotalBoletos + totalConfiteria).toFixed(2);
+            const descuento = +(subtotal * porcentajeDescuento).toFixed(2);
+            const totalNeto = +Math.max(0, subtotal - descuento).toFixed(2);
 
-            // Extraemos de forma segura el ID de sesión de caja
             const sesionId = cajaData && cajaData.idSesionCaja ? parseInt(cajaData.idSesionCaja) : 1;
 
             const payload = {
@@ -212,7 +375,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 subtotal: subtotal,
                 descuento: descuento,
                 totalNeto: totalNeto,
-                asientos: asientosSeleccionados
+                asientos: asientosSeleccionados,
+                confiteria: confiteriaItems,
+                totalConfiteria: +totalConfiteria.toFixed(2)
             };
 
             fetch('http://localhost:3000/api/ventas/procesar', {
@@ -233,8 +398,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     cajaData.saldoActual = parseFloat(cajaData.saldoActual || 0) + totalNeto;
                     localStorage.setItem("caja_activa", JSON.stringify(cajaData));
 
-                    alert(`[VENTA CONSOLIDADA CON ÉXITO]\n\nCódigo de Venta: VNT-${data.idVenta}\nAsientos Reservados: ${asientosSeleccionados.join(", ")}\nTotal Cobrado: S/ ${totalNeto.toFixed(2)}`);
-                    
+                    const resumenConfiTexto = confiteriaItems.length > 0
+                        ? "\nConfitería: " + confiteriaItems.map(i => `${i.cantidad}x ${i.nombre}`).join(", ")
+                        : "";
+
+                    alert(`[VENTA CONSOLIDADA CON ÉXITO]\n\nCódigo de Venta: VNT-${data.idVenta}\nAsientos Reservados: ${asientosSeleccionados.join(", ")}${resumenConfiTexto}\nTotal Cobrado: S/ ${totalNeto.toFixed(2)}`);
+
                     // Limpieza de interfaz para la siguiente transacción
                     if (panelMapa) panelMapa.classList.add("hidden");
                     if (selectFuncion) selectFuncion.value = "";
@@ -244,6 +413,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         txtDescuentoTipo.style.color = "#ffffff";
                     }
                     asientosSeleccionados = [];
+                    carritoConfiteria = {};
+                    renderizarConfiteria();
                     actualizarLiquidacion();
                 } else {
                     alert("Error en la transacción: " + data.message);
@@ -260,11 +431,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnSalirVenta = document.getElementById("btn-salir-venta");
     if (btnSalirVenta) {
         btnSalirVenta.addEventListener("click", () => {
-            if (confirm("¿Desea cancelar la transacción actual? Se perderá la selección de butacas.")) {
+            if (confirm("¿Desea cancelar la transacción actual? Se perderá la selección de butacas y confitería.")) {
                 if (panelMapa) panelMapa.classList.add("hidden");
                 if (selectFuncion) selectFuncion.value = "";
                 if (txtDni) txtDni.value = "";
                 asientosSeleccionados = [];
+                carritoConfiteria = {};
+                renderizarConfiteria();
                 actualizarLiquidacion();
             }
         });
