@@ -1001,6 +1001,33 @@ app.post('/api/cajas/cerrar', (req, res) => {
         });
     });
 });
+app.put('/api/roles/:id', (req, res) => {
+    const idRol = Number(req.params.id);
+    const { nombreRol, descripcion } = req.body;
+
+    if (!idRol || !nombreRol || !nombreRol.trim()) {
+        return res.status(400).json({ success: false, message: "El ID y el nombre del rol son obligatorios." });
+    }
+
+    const query = `
+        UPDATE rol
+        SET nombreRol = ?, descripcion = ?
+        WHERE idRol = ?
+    `;
+
+    db.query(query, [nombreRol.trim(), (descripcion || "").trim(), idRol], (err, result) => {
+        if (err) {
+            console.error("❌ Error actualizando rol:", err);
+            return res.status(500).json({ success: false, message: "Error al actualizar el rol en la base de datos." });
+        }
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "Rol no encontrado." });
+        }
+
+        res.json({ success: true, message: "Rol actualizado con éxito." });
+    });
+});
 
 // =========================================================================
 // AUDITORÍA: Consultar Movimientos desde la Base de Datos Real (CORREGIDO)
