@@ -92,7 +92,7 @@ CREATE TABLE `caja` (
   PRIMARY KEY (`idSesionCaja`),
   KEY `idUsuario` (`idUsuario`),
   CONSTRAINT `caja_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -101,7 +101,7 @@ CREATE TABLE `caja` (
 
 LOCK TABLES `caja` WRITE;
 /*!40000 ALTER TABLE `caja` DISABLE KEYS */;
-INSERT INTO `caja` VALUES (1,2,1,'2026-09-23 06:24:51',NULL,150.00,NULL,NULL,'Abierta');
+INSERT INTO `caja` VALUES (1,2,1,'2026-09-23 06:24:51','2026-10-17 13:46:50',150.00,150.00,150.00,'Cerrada'),(2,2,1,'2026-11-14 03:11:54',NULL,150.00,NULL,NULL,'Abierta');
 /*!40000 ALTER TABLE `caja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -124,7 +124,7 @@ CREATE TABLE `cliente` (
   PRIMARY KEY (`id_cliente`),
   UNIQUE KEY `correo` (`correo`),
   UNIQUE KEY `unique_dni` (`dni`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -133,6 +133,7 @@ CREATE TABLE `cliente` (
 
 LOCK TABLES `cliente` WRITE;
 /*!40000 ALTER TABLE `cliente` DISABLE KEYS */;
+INSERT INTO `cliente` VALUES (1,'Ana','Pérez','Gómez','ana.prueba01@example.com','$2b$10$Tvex83CUXpnDWKEa2sAYzurSuWFhBr78/rk1/k5VypeEYpPscu.2W','87654321','2026-11-13 22:31:11'),(2,'Ana','Pérez','Gómez','duplicado.test@example.com','$2b$10$pLyeJI0CwdJNla2cuP6Iru72BW3mqrQ2baSGO3gav6BR8no/ldLV2','88887777','2026-11-13 22:31:11'),(3,'Cliente',NULL,NULL,'dni_12345678_1795639606182@cine.com','temp_hash','12345678','2026-11-25 15:46:46'),(4,'pepe','pepe','pepe','prueba@gmail.com','$2b$10$dFGW6vP9cjxleRCq26QrQ.ZldkNRY932s/NhAPZtf9kcpuH/j33X2','13679827','2026-11-25 16:21:56');
 /*!40000 ALTER TABLE `cliente` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -179,7 +180,7 @@ CREATE TABLE `cuadre_de_caja` (
   PRIMARY KEY (`idCuadre`),
   UNIQUE KEY `idSesionCaja` (`idSesionCaja`),
   CONSTRAINT `cuadre_de_caja_ibfk_1` FOREIGN KEY (`idSesionCaja`) REFERENCES `caja` (`idSesionCaja`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -188,6 +189,7 @@ CREATE TABLE `cuadre_de_caja` (
 
 LOCK TABLES `cuadre_de_caja` WRITE;
 /*!40000 ALTER TABLE `cuadre_de_caja` DISABLE KEYS */;
+INSERT INTO `cuadre_de_caja` VALUES (1,1,0.00,'Cierre de turno regular');
 /*!40000 ALTER TABLE `cuadre_de_caja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -273,7 +275,7 @@ CREATE TABLE `detalle_venta` (
   CONSTRAINT `detalle_venta_ibfk_2` FOREIGN KEY (`idFuncion`) REFERENCES `funcion` (`idFuncion`),
   CONSTRAINT `detalle_venta_ibfk_3` FOREIGN KEY (`idAsiento`) REFERENCES `asiento` (`idAsiento`),
   CONSTRAINT `detalle_venta_ibfk_4` FOREIGN KEY (`idProducto`) REFERENCES `producto` (`idProducto`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -282,6 +284,7 @@ CREATE TABLE `detalle_venta` (
 
 LOCK TABLES `detalle_venta` WRITE;
 /*!40000 ALTER TABLE `detalle_venta` DISABLE KEYS */;
+INSERT INTO `detalle_venta` VALUES (1,1,2,NULL,NULL,'Entrada - Butaca A1',18.00,0.00),(2,1,2,NULL,NULL,'Entrada - Butaca A2',18.00,0.00);
 /*!40000 ALTER TABLE `detalle_venta` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -306,7 +309,7 @@ CREATE TABLE `funcion` (
   KEY `idSala` (`idSala`),
   CONSTRAINT `funcion_ibfk_1` FOREIGN KEY (`idPelicula`) REFERENCES `pelicula` (`idPelicula`),
   CONSTRAINT `funcion_ibfk_2` FOREIGN KEY (`idSala`) REFERENCES `sala` (`idSala`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +318,7 @@ CREATE TABLE `funcion` (
 
 LOCK TABLES `funcion` WRITE;
 /*!40000 ALTER TABLE `funcion` DISABLE KEYS */;
-INSERT INTO `funcion` VALUES (1,1,1,'2026-09-15','04:25','00:00','Disponible',18.00);
+INSERT INTO `funcion` VALUES (2,1,1,'2026-11-25','19:00','21:00','Disponible',18.00);
 /*!40000 ALTER TABLE `funcion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -334,7 +337,7 @@ CREATE TABLE `ingreso` (
   PRIMARY KEY (`idNotaIngreso`),
   KEY `idUsuario` (`idUsuario`),
   CONSTRAINT `ingreso_ibfk_1` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -393,7 +396,7 @@ CREATE TABLE `movimiento_de_caja` (
   KEY `idVenta` (`idVenta`),
   CONSTRAINT `movimiento_de_caja_ibfk_1` FOREIGN KEY (`idSesionCaja`) REFERENCES `caja` (`idSesionCaja`),
   CONSTRAINT `movimiento_de_caja_ibfk_2` FOREIGN KEY (`idVenta`) REFERENCES `venta` (`idVenta`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -402,7 +405,7 @@ CREATE TABLE `movimiento_de_caja` (
 
 LOCK TABLES `movimiento_de_caja` WRITE;
 /*!40000 ALTER TABLE `movimiento_de_caja` DISABLE KEYS */;
-INSERT INTO `movimiento_de_caja` VALUES (1,1,NULL,'SALDO INICIAL APERTURA',150.00,'01:24:51');
+INSERT INTO `movimiento_de_caja` VALUES (1,1,NULL,'SALDO INICIAL APERTURA',150.00,'01:24:51'),(2,1,1,'INGRESO POR VENTA',18.00,'12:37'),(3,1,2,'INGRESO POR VENTA',54.00,'12:37'),(4,1,3,'INGRESO POR VENTA',36.00,'12:37'),(5,1,4,'INGRESO POR VENTA',18.00,'12:37'),(6,1,5,'INGRESO POR VENTA',18.00,'12:37'),(7,1,6,'INGRESO POR VENTA',18.00,'12:41'),(8,1,7,'INGRESO POR VENTA',54.00,'12:41'),(9,1,8,'INGRESO POR VENTA',36.00,'12:41'),(10,1,9,'INGRESO POR VENTA',18.00,'12:41'),(11,1,10,'INGRESO POR VENTA',18.00,'12:41'),(12,1,11,'INGRESO POR VENTA',54.00,'12:41'),(13,1,12,'INGRESO POR VENTA',36.00,'12:41'),(14,1,13,'INGRESO POR VENTA',18.00,'12:41'),(15,1,1,'INGRESO POR VENTA',54.00,'13:20'),(28,2,NULL,'SALDO INICIAL APERTURA',150.00,'22:11:54');
 /*!40000 ALTER TABLE `movimiento_de_caja` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -424,7 +427,7 @@ CREATE TABLE `orden` (
   KEY `idUsuario` (`idUsuario`),
   CONSTRAINT `orden_ibfk_1` FOREIGN KEY (`idProveedor`) REFERENCES `proveedor` (`idProveedor`),
   CONSTRAINT `orden_ibfk_2` FOREIGN KEY (`idUsuario`) REFERENCES `usuario` (`idUsuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -452,7 +455,7 @@ CREATE TABLE `pelicula` (
   `sipnosis` text,
   `imagenPoster` longblob,
   PRIMARY KEY (`idPelicula`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -461,7 +464,7 @@ CREATE TABLE `pelicula` (
 
 LOCK TABLES `pelicula` WRITE;
 /*!40000 ALTER TABLE `pelicula` DISABLE KEYS */;
-INSERT INTO `pelicula` VALUES (1,'Avengers: Endgame',181,'Acción','Los héroes sobrevivientes buscan revertir el daño...',NULL),(2,'Interestelar',169,'Ciencia Ficción','Un equipo de exploradores viaja a través de un agujero de gusano...',NULL);
+INSERT INTO `pelicula` VALUES (1,'Avengers: Endgame',181,'Acción','Los héroes sobrevivientes buscan revertir el daño...',_binary 'img/avengers.jpg'),(2,'Interestelar',169,'Ciencia Ficción','Un equipo de exploradores viaja a través de un agujero de gusano...',_binary 'img/interestelar.jpg'),(3,'Avatar 3',190,'Ciencia Ficción','Secuela de Avatar',_binary 'avatar.jpg');
 /*!40000 ALTER TABLE `pelicula` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -562,7 +565,7 @@ CREATE TABLE `rol` (
   `estado` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`idRol`),
   UNIQUE KEY `nombreRol` (`nombreRol`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -571,7 +574,7 @@ CREATE TABLE `rol` (
 
 LOCK TABLES `rol` WRITE;
 /*!40000 ALTER TABLE `rol` DISABLE KEYS */;
-INSERT INTO `rol` VALUES (1,'Administrador','Acceso total a la configuración y gestión del sistema',1),(2,'Cajero','Acceso a venta presencial, aperturas y cierres de caja',1),(3,'Encargado_Almacen','Acceso al inventario e ingreso de productos',1);
+INSERT INTO `rol` VALUES (1,'Administrador','Acceso total a la configuración y gestión del sistema',1),(2,'Cajero','Acceso a venta presencial, aperturas y cierres de caja',1),(3,'Encargado_Almacen','Acceso al inventario e ingreso de productos',1),(4,'Encargado_Programacion','Encargado de añadir las películas y programar las funciones',1);
 /*!40000 ALTER TABLE `rol` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -620,7 +623,7 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `username` (`username`),
   KEY `fk_usuario_rol` (`idRol`),
   CONSTRAINT `fk_usuario_rol` FOREIGN KEY (`idRol`) REFERENCES `rol` (`idRol`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -629,7 +632,7 @@ CREATE TABLE `usuario` (
 
 LOCK TABLES `usuario` WRITE;
 /*!40000 ALTER TABLE `usuario` DISABLE KEYS */;
-INSERT INTO `usuario` VALUES (2,'cajero','1234','Pedro Emmanuel','Zapata',2,1),(3,'almacenero','1234','Pedro','Zapata',3,1);
+INSERT INTO `usuario` VALUES (1,'admin','1234','Admin','Sistema',1,1),(2,'cajero','1234','Pedro Emmanuel','Zapata',2,1),(3,'almacenero','1234','Pedro','Zapata',3,1),(5,'programador','1234','Pedro','Zapata',4,1);
 /*!40000 ALTER TABLE `usuario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -653,7 +656,7 @@ CREATE TABLE `venta` (
   PRIMARY KEY (`idVenta`),
   KEY `idCliente` (`idCliente`),
   CONSTRAINT `venta_ibfk_1` FOREIGN KEY (`idCliente`) REFERENCES `cliente` (`id_cliente`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -662,6 +665,7 @@ CREATE TABLE `venta` (
 
 LOCK TABLES `venta` WRITE;
 /*!40000 ALTER TABLE `venta` DISABLE KEYS */;
+INSERT INTO `venta` VALUES (1,3,'2026-11-25 15:46:46',2,36.00,0.00,36.00,'Taquilla','Completada');
 /*!40000 ALTER TABLE `venta` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -674,4 +678,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-02 16:05:19
+-- Dump completed on 2026-11-28 11:39:41
